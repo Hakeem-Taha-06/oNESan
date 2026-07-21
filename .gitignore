@@ -427,3 +427,10 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+
+# my build/project files
+
+bin/
+bin-int/
+build/
