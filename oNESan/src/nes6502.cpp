@@ -131,7 +131,7 @@ uint8_t nes6502::ZPY() {
 
 // Absolute: the next two bytes represent the target location
 uint8_t nes6502::ABS() {
-	//assumes little endian order of low byte followed by hight byte
+	//assumes little endian order of low byte followed by high byte
 	uint8_t lo = read(pc); // read the low byte of the address and increment pc
 	pc++;
 	uint8_t hi = read(pc); // read the high byte of the address and increment pc

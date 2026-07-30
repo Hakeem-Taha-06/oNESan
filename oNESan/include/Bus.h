@@ -7,7 +7,7 @@
 class Bus
 {
 public:
-	Bus();
+	Bus(nes6502* cpu);
 	~Bus();
 
 	uint8_t read(uint16_t address);
@@ -15,6 +15,6 @@ public:
 
 	//temporary ram
 	std::array<uint8_t, 64 * 1028> ram;
-	nes6502 nes6502;
+	nes6502* m_cpu;
 };
 

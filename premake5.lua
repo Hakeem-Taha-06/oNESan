@@ -1,4 +1,4 @@
-workspace "oNESsan"
+workspace "oNESan"
     configurations{
         "Debug", 
         "Release"
@@ -7,8 +7,8 @@ workspace "oNESsan"
 
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
-project "oNESsan"
-    location "oNESsan"
+project "oNESan"
+    location "oNESan"
     language "C++"
     kind "ConsoleApp"
 
@@ -19,12 +19,15 @@ project "oNESsan"
     {
         "%{prj.name}/src/**.cpp",
         "%{prj.name}/src/**.c",
-        "%{prj.name}/include/**.h"
+        "%{prj.name}/include/**.h",
+        "%{prj.name}/dependencies/src/**.cpp",
+        "%{prj.name}/dependencies/src/**.c"
     }
 
     includedirs
     {
         "%{wks.location}/%{prj.name}/dependencies/include",
+        "%{wks.location}/%{prj.name}/dependencies/include/imgui",
         "%{prj.name}/src",
         "%{prj.name}/include"
     }
@@ -36,7 +39,7 @@ project "oNESsan"
     
     links 
     {
-        "opengl32.lib"
+        "opengl32"
     }
 
     cppdialect "C++17"

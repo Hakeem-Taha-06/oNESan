@@ -11,10 +11,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{7C6A421F-E849-C1BA-F161-4C915DC0271C}</ProjectGuid>
+    <ProjectGuid>{095E7610-F5FF-A0E6-DEBA-B43ACAFB2737}</ProjectGuid>
     <IgnoreWarnCompileDuplicatedFilename>true</IgnoreWarnCompileDuplicatedFilename>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>oNESsan</RootNamespace>
+    <RootNamespace>oNESan</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -42,16 +42,16 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(ProjectDir)..\bin\Debug-windows-x86_64\oNESsan\</OutDir>
-    <IntDir>$(ProjectDir)..\bin-int\Debug-windows-x86_64\oNESsan\</IntDir>
-    <TargetName>oNESsan</TargetName>
+    <OutDir>$(ProjectDir)..\bin\Debug-windows-x86_64\oNESan\</OutDir>
+    <IntDir>$(ProjectDir)..\bin-int\Debug-windows-x86_64\oNESan\</IntDir>
+    <TargetName>oNESan</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)..\bin\Release-windows-x86_64\oNESsan\</OutDir>
-    <IntDir>$(ProjectDir)..\bin-int\Release-windows-x86_64\oNESsan\</IntDir>
-    <TargetName>oNESsan</TargetName>
+    <OutDir>$(ProjectDir)..\bin\Release-windows-x86_64\oNESan\</OutDir>
+    <IntDir>$(ProjectDir)..\bin-int\Release-windows-x86_64\oNESan\</IntDir>
+    <TargetName>oNESan</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -59,7 +59,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>dependencies\include;src;include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>dependencies\include;dependencies\include\imgui;src;include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -81,7 +81,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>dependencies\include;src;include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>dependencies\include;dependencies\include\imgui;src;include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>None</DebugInformationFormat>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -105,10 +105,22 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="include\Bus.h" />
+    <ClInclude Include="include\Emulator.h" />
+    <ClInclude Include="include\Window.h" />
     <ClInclude Include="include\nes6502.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="dependencies\src\glad.c" />
+    <ClCompile Include="dependencies\src\imgui.cpp" />
+    <ClCompile Include="dependencies\src\imgui_demo.cpp" />
+    <ClCompile Include="dependencies\src\imgui_draw.cpp" />
+    <ClCompile Include="dependencies\src\imgui_impl_glfw.cpp" />
+    <ClCompile Include="dependencies\src\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="dependencies\src\imgui_tables.cpp" />
+    <ClCompile Include="dependencies\src\imgui_widgets.cpp" />
     <ClCompile Include="src\Bus.cpp" />
+    <ClCompile Include="src\Emulator.cpp" />
+    <ClCompile Include="src\Window.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\nes6502.cpp" />
   </ItemGroup>
