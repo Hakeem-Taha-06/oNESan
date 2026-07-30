@@ -1,9 +1,7 @@
 #include "Bus.h"
 
-Bus::Bus(nes6502* cpu) {
-	m_cpu = cpu;
-
-	cpu->connectBus(this);
+Bus::Bus() {
+	cpu.connectBus(this);
 
 	for (auto& i : ram) i = 0x00;
 }

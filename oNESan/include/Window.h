@@ -9,6 +9,8 @@
 
 #include <iostream>
 
+class Emulator;
+
 class Window
 {
 public:
@@ -16,7 +18,11 @@ public:
 	~Window();
 
 	void init();
-	void render();
+	void startFrame();
+	void render(const Emulator& emulator);
+	void endFrame();
+
+	inline bool shouldExit() const { return glfwWindowShouldClose(m_window); }
 private:
 	GLFWwindow* m_window;
 

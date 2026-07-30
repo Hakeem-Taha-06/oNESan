@@ -27,6 +27,9 @@
     <ClInclude Include="include\nes6502.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\Application.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dependencies\src\glad.c">
@@ -66,6 +69,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\nes6502.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Application.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

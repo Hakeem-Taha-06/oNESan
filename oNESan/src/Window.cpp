@@ -1,13 +1,16 @@
 #include "Window.h"
+#include "Emulator.h"
 
-Window::Window(int width, int height):WIDTH(width), HEIGHT(height){
+Window::Window(int width, int height): WIDTH(width), HEIGHT(height){
 	init();
 }
 
 Window::~Window() {
+	// ImGui termination (all debug ui stuff can be moved to a separate ui class)
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
+
 	glfwTerminate();
 }
 
@@ -45,7 +48,7 @@ void Window::init() {
 
 	//setGLFWEventCallbacks(w);
 
-	// Setup Dear ImGui context (Taken from one of their examples)
+	// Setup Dear ImGui context (all debug ui stuff can be moved to a separate ui class)
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO();
@@ -77,36 +80,38 @@ void Window::init() {
 	m_window = w;
 }
 
-void Window::render() {
-	while (!glfwWindowShouldClose(m_window)) {
-		glfwPollEvents();
+void Window::render(const Emulator& emulator) {
+	//rendering
+	glClearColor(0.2f, 0.2f, 0.5f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT);
 
-		// Start the Dear ImGui frame
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
-		ImGui::NewFrame();
+	// IMGUI (all debug ui stuff can be moved to a separate ui class)
+	// Create a dockspace that covers the entire viewport
+	ImGui::DockSpaceOverViewport(ImGui::GetMainViewport()->ID, ImGui::GetMainViewport());
 
-		//rendering
-		glClearColor(0.2f, 0.2f, 0.5f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
+	ImGui::ShowDemoWindow(); // Show demo window! :)
 
-		// IMGUI
-		// Create a dockspace that covers the entire viewport
-		ImGui::DockSpaceOverViewport(ImGui::GetMainViewport()->ID, ImGui::GetMainViewport());
+	ImGui::Render();
+	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-		ImGui::ShowDemoWindow(); // Show demo window! :)
-	
-		ImGui::Render();
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-		if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-		{
-			GLFWwindow* backup_current_context = glfwGetCurrentContext();
-			ImGui::UpdatePlatformWindows();
-			ImGui::RenderPlatformWindowsDefault();
-			glfwMakeContextCurrent(backup_current_context);
-		}
-
-		glfwSwapBuffers(m_window);
+	if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+	{
+		GLFWwindow* backup_current_context = glfwGetCurrentContext();
+		ImGui::UpdatePlatformWindows();
+		ImGui::RenderPlatformWindowsDefault();
+		glfwMakeContextCurrent(backup_current_context);
 	}
+}
+
+void Window::startFrame() {
+	glfwPollEvents();
+
+	// Start the Dear ImGui frame (all debug ui stuff can be moved to a separate ui class)
+	ImGui_ImplOpenGL3_NewFrame();
+	ImGui_ImplGlfw_NewFrame();
+	ImGui::NewFrame();
+}
+
+void Window::endFrame() {
+	glfwSwapBuffers(m_window);
 }

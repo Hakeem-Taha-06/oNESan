@@ -4,18 +4,17 @@
 
 #include "Bus.h"
 #include "nes6502.h"
-#include "Window.h"
 
 class Emulator {
 public:
 	Emulator();
 	~Emulator();
 
-	void run();
+	void clock();
+	void runTestProgram();
 private:
 	void init();
 
-	Bus* bus;
-	nes6502* cpu;
-	Window* window;
+	Bus bus;
+	nes6502 cpu;
 };

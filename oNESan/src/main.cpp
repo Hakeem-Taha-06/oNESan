@@ -1,13 +1,13 @@
 #include <cstdint>
 #include <iostream>
 
-#include "Emulator.h"
+#include "Application.h"
 
 int main() {
 
-	Emulator e;
+	Application a{800, 600};
 
-	e.run();
+	a.run();
 
 	return 0;
 }
