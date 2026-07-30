@@ -90,10 +90,9 @@ void Window::render() {
 		glClearColor(0.2f, 0.2f, 0.5f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-
 		// IMGUI
 		// Create a dockspace that covers the entire viewport
-		ImGui::DockSpaceOverViewport(0U, ImGui::GetMainViewport());
+		ImGui::DockSpaceOverViewport(ImGui::GetMainViewport()->ID, ImGui::GetMainViewport());
 
 		ImGui::ShowDemoWindow(); // Show demo window! :)
 	
