@@ -10,12 +10,16 @@ Emulator::~Emulator() {
 
 void Emulator::init() {
 
+	bus.write(0x0000, 0x21); // some data in the zero page
+
+	bus.write(0xFFFC, 0x00); // reset vector
+	bus.write(0xFFFD, 0x02); //       
+
 	// - start - hardcoded test program
-	bus.write(0xFFFC, 0x4C); //JMP $0200   (instead of the regular reset vector, i just added a jump instruction)  
-	bus.write(0xFFFD, 0x00); //       ^
-	bus.write(0xFFFE, 0x02); //     ^
 	bus.write(0x0200, 0xA9); //LDA #F1
 	bus.write(0x0201, 0xF1); //     ^
+	bus.write(0x0202, 0xA4); //LDY $00
+	bus.write(0x0203, 0x00); //     ^
 	// - end -   hardcoded test program\
 
 	bus.cpu.reset();
@@ -27,11 +31,10 @@ void Emulator::clock() {
 }
 
 void Emulator::runTestProgram() {
-	// JMP -> should set pc to 0x0200 and modify no flags
+	// LDA
 	bus.cpu.clock();
 	bus.cpu.clock();
-	bus.cpu.clock();
-	// LDA -> should load acc with 0xF1 and set O flag to 1 
+	// LDY  
 	bus.cpu.clock();
 	bus.cpu.clock();
 }

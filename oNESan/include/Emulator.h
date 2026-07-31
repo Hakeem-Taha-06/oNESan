@@ -16,5 +16,4 @@ private:
 	void init();
 
 	Bus bus;
-	nes6502 cpu;
 };

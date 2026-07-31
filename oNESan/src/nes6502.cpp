@@ -42,7 +42,11 @@ void nes6502::write(uint16_t address, uint8_t data) {
 }
 
 void nes6502::reset() {
-	pc = 0xFFFC;
+	// Set program counter to reset vector stored at 0xFFFC/D
+	uint8_t lo = read(0xFFFC);
+	uint8_t hi = read(0xFFFD);
+	pc = (hi << 8) | lo;
+
 	stkp = 0xFD;
 	acc = 0x00;
 	xreg = 0x00;
@@ -132,20 +136,118 @@ uint8_t nes6502::ZPY() {
 // Absolute: the next two bytes represent the target location
 uint8_t nes6502::ABS() {
 	//assumes little endian order of low byte followed by high byte
-	uint8_t lo = read(pc); // read the low byte of the address and increment pc
+	uint16_t lo = read(pc); // read the low byte of the address and increment pc
 	pc++;
-	uint8_t hi = read(pc); // read the high byte of the address and increment pc
+	uint16_t hi = read(pc); // read the high byte of the address and increment pc
 	pc++;
 
 	addr_abs = (hi << 8) | lo; // HHHH HHHH LLLL LLLL
 	return 0;
 }
 
-// to be implemented
-uint8_t nes6502::IND() { return 0; };
-uint8_t nes6502::REL() { return 0; };
-uint8_t nes6502::ABX() { return 0; }; uint8_t nes6502::ABY() { return 0; };
-uint8_t nes6502::IZX() { return 0; }; uint8_t nes6502::IZY() { return 0; };
+uint8_t nes6502::ABX() { 
+	//assumes little endian order of low byte followed by high byte
+	uint16_t lo = read(pc); // read the low byte of the address and increment pc
+	pc++;
+	uint16_t hi = read(pc); // read the high byte of the address and increment pc
+	pc++;
+
+	addr_abs = (hi << 8) | lo; // HHHH HHHH LLLL LLLL
+	addr_abs += xreg;
+
+	// If adding xreg results in moving to another page then add another cycle for the instruction
+	// this can be checked by checking for the high byte of the address and comparing it to the high byte before adding xreg
+	if ((addr_abs & 0xFF00) != (hi << 8))
+		return 1;
+
+	return 0; 
+}
+
+uint8_t nes6502::ABY() {
+	//assumes little endian order of low byte followed by high byte
+	uint16_t lo = read(pc); // read the low byte of the address and increment pc
+	pc++;
+	uint16_t hi = read(pc); // read the high byte of the address and increment pc
+	pc++;
+
+	addr_abs = (hi << 8) | lo; // HHHH HHHH LLLL LLLL
+	addr_abs += yreg;
+
+	// If adding yreg results in moving to another page then add another cycle for the instruction
+	// this can be checked by checking for the high byte of the address and comparing it to the high byte before adding yreg
+	if ((addr_abs & 0xFF00) != (hi << 8))
+		return 1;
+
+	return 0;
+}
+
+// Indirect: the next two byte represent the memory location holding the value of the target location (pointers)
+uint8_t nes6502::IND() { 
+
+	uint16_t ptr_lo = read(pc);
+	pc++;
+	uint16_t ptr_hi = read(pc);
+	pc++;
+
+	uint16_t ptr = (ptr_hi << 8) | ptr_lo;
+
+	if (ptr_lo == 0x00FF)  // Simulate page boundary hardware bug (the high byte failing to increment at the end of a page)
+		addr_abs = (read(ptr & 0xFF00) << 8) | read(ptr);
+	else 
+		// Normal behaviour
+		addr_abs = (read(ptr + 1) << 8) | read(ptr);
+	
+	return 0; 
+}
+
+// Indexed Indirect: the instruction specifies a zero page location and then the xreg is added to it,
+//                   the resulting value represents the address where the target location value lives
+uint8_t nes6502::IZX() {
+	// the first operand represents the zero page index
+	uint16_t zp = read(pc);
+	pc++;
+
+	// add the xreg to it and wrap around, this value represents the address of the target location
+	uint16_t ptr = (zp + xreg) & 0x00FF;
+
+	// read the two bytes at the location specified, this is the target location
+	uint16_t lo = read(ptr);
+	uint16_t hi = read(ptr + 1);
+
+	addr_abs = (hi << 8) | lo;
+
+	return 0;
+}
+
+// Indirect Indexed: the instruction specifies a zero page location which represents where 
+//                   the unmodified target location lives, the yreg is then added to it, 
+//                   the resulting value is the target location.
+//                   if the addition of the yreg results in changing pages, add 1 extra cycle
+uint8_t nes6502::IZY() {
+	uint16_t zp = read(pc);
+	pc++;
+
+	uint16_t lo = read(zp & 0x00FF);      // read two bytes for the initial target location  
+	uint16_t hi = read((zp + 1) & 0x00FF);
+
+	uint16_t ptr = (hi << 8) | lo;
+	addr_abs = ptr + yreg;                // add the yreg to get the final target location 
+
+	// if this results in incrementing the page, add an extra cycle to the instruction
+	if ((addr_abs & 0xFF00)!= hi << 8) 
+		return 1;
+	else 
+		return 0;
+}
+
+// Relative: specifies a signed offset from -128 to 127 from the current program counter
+uint8_t nes6502::REL() { 
+	addr_rel = read(pc);
+	pc++;
+	if (addr_rel & 0x80)     // if the value is negative, set its high byte to all 1's 
+		addr_rel |= 0xFF00;
+	return 0;
+}
 
 // ---------------------------------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------------------------------
@@ -157,6 +259,65 @@ uint8_t nes6502::LDA() {
 	acc = read(addr_abs);           // reads a byte of memory into the accumulator
 	setFlag(Z, acc == 0);           // set the zero flag if the accumulator is zero
 	setFlag(O, (acc & (1<<7)) > 0); // set the overflow flag if the MSB is high
+	return 0;
+}
+
+// Load X Register: Loads a byte of memory into the X register setting the zero and negative flags as appropriate
+uint8_t nes6502::LDX() {
+	xreg = read(addr_abs);             // reads a byte of memory into the x register
+	setFlag(Z, xreg == 0);             // set the zero flag if the x register is zero
+	setFlag(O, (xreg & (1 << 7)) > 0); // set the overflow flag if the MSB is high
+	return 0;
+}
+
+// Load Y Register: Loads a byte of memory into the X register setting the zero and negative flags as appropriate
+uint8_t nes6502::LDY() {
+	yreg = read(addr_abs);             // reads a byte of memory into the y register
+	setFlag(Z, yreg == 0);             // set the zero flag if the y register is zero
+	setFlag(O, (yreg & (1 << 7)) > 0); // set the overflow flag if the MSB is high
+	return 0;
+}
+
+uint8_t nes6502::STA() {
+	write(addr_abs, acc);
+	return 0;
+}
+
+uint8_t nes6502::STX() {
+	write(addr_abs, xreg);
+	return 0;
+}
+
+uint8_t nes6502::STY() {
+	write(addr_abs, yreg);
+	return 0;
+}
+
+uint8_t nes6502::TAX() {
+	xreg = acc;
+	setFlag(Z, xreg == 0);             // set the zero flag if the x register is zero
+	setFlag(O, (xreg & (1 << 7)) > 0); // set the overflow flag if the MSB is high
+	return 0;
+}
+
+uint8_t nes6502::TAY() {
+	yreg = acc;
+	setFlag(Z, yreg == 0);             // set the zero flag if the y register is zero
+	setFlag(O, (yreg & (1 << 7)) > 0); // set the overflow flag if the MSB is high
+	return 0;
+}
+
+uint8_t nes6502::TXA() {
+	acc = xreg;
+	setFlag(Z, acc == 0);             // set the zero flag if the accumulator is zero
+	setFlag(O, (acc & (1 << 7)) > 0); // set the overflow flag if the MSB is high
+	return 0;
+}
+
+uint8_t nes6502::TYA() {
+	acc = yreg;
+	setFlag(Z, acc == 0);             // set the zero flag if the accumulator is zero
+	setFlag(O, (acc & (1 << 7)) > 0); // set the overflow flag if the MSB is high
 	return 0;
 }
 
@@ -173,13 +334,11 @@ uint8_t nes6502::BNE() { return 0; } uint8_t nes6502::BPL() { return 0; } uint8_
 uint8_t nes6502::BVS() { return 0; } uint8_t nes6502::CLC() { return 0; } uint8_t nes6502::CLD() { return 0; } uint8_t nes6502::CLI() { return 0; }
 uint8_t nes6502::CLV() { return 0; } uint8_t nes6502::CMP() { return 0; } uint8_t nes6502::CPX() { return 0; } uint8_t nes6502::CPY() { return 0; }
 uint8_t nes6502::DEC() { return 0; } uint8_t nes6502::DEX() { return 0; } uint8_t nes6502::DEY() { return 0; } uint8_t nes6502::EOR() { return 0; }
-uint8_t nes6502::INC() { return 0; } uint8_t nes6502::INX() { return 0; } uint8_t nes6502::INY() { return 0; } 
-uint8_t nes6502::JSR() { return 0; } uint8_t nes6502::LDX() { return 0; } uint8_t nes6502::LDY() { return 0; }
+uint8_t nes6502::INC() { return 0; } uint8_t nes6502::INX() { return 0; } uint8_t nes6502::INY() { return 0; } uint8_t nes6502::JSR() { return 0; } 
 uint8_t nes6502::LSR() { return 0; } uint8_t nes6502::NOP() { return 0; } uint8_t nes6502::ORA() { return 0; } uint8_t nes6502::PHA() { return 0; }
 uint8_t nes6502::PHP() { return 0; } uint8_t nes6502::PLA() { return 0; } uint8_t nes6502::PLP() { return 0; } uint8_t nes6502::ROL() { return 0; }
 uint8_t nes6502::ROR() { return 0; } uint8_t nes6502::RTI() { return 0; } uint8_t nes6502::RTS() { return 0; } uint8_t nes6502::SBC() { return 0; }
-uint8_t nes6502::SEC() { return 0; } uint8_t nes6502::SED() { return 0; } uint8_t nes6502::SEI() { return 0; } uint8_t nes6502::STA() { return 0; }
-uint8_t nes6502::STX() { return 0; } uint8_t nes6502::STY() { return 0; } uint8_t nes6502::TAX() { return 0; } uint8_t nes6502::TAY() { return 0; }
-uint8_t nes6502::TSX() { return 0; } uint8_t nes6502::TXA() { return 0; } uint8_t nes6502::TXS() { return 0; } uint8_t nes6502::TYA() { return 0; }
+uint8_t nes6502::SEC() { return 0; } uint8_t nes6502::SED() { return 0; } uint8_t nes6502::SEI() { return 0; } 
+uint8_t nes6502::TSX() { return 0; } uint8_t nes6502::TXS() { return 0; }
 
 uint8_t nes6502::XXX() { return 0; }
