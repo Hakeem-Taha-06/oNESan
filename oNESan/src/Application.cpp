@@ -9,10 +9,12 @@ Application::~Application() {
 }
 
 void Application::run() {
-	emulator.runTestProgram();
 	while (!window.shouldExit()) {
 		window.startFrame();
 		window.render(emulator);
+		if (window.getEmulationMode() == EmulationMode::Automatic) {
+			emulator.clock();
+		}
 		window.endFrame();
 	}
 }

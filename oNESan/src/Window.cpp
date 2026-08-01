@@ -80,7 +80,7 @@ void Window::init() {
 	m_window = w;
 }
 
-void Window::render(const Emulator& emulator) {
+void Window::render(Emulator& emulator) {
 	//rendering
 	glClearColor(0.2f, 0.2f, 0.5f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -89,7 +89,55 @@ void Window::render(const Emulator& emulator) {
 	// Create a dockspace that covers the entire viewport
 	ImGui::DockSpaceOverViewport(ImGui::GetMainViewport()->ID, ImGui::GetMainViewport());
 
-	ImGui::ShowDemoWindow(); // Show demo window! :)
+	ImGui::Begin("Debug Window");
+	ImGui::Text("Value to be Put in Accumulator: ");
+
+	int value = emulator.testOperand;
+	value = std::clamp(value, 0, 255);
+	if(ImGui::InputInt("Value", &value)) {
+		emulator.testOperand = value;
+	}
+	if (ImGui::Button("Reset Test Program")) {
+		const_cast<Emulator&>(emulator).writeTestProgram();
+	}
+	if (ImGui::Button("Clock Emulator")) {
+		const_cast<Emulator&>(emulator).clock();
+	}
+	ImGui::End();
+
+	ImGui::Begin("CPU");
+
+	if (ImGui::TreeNode("Registers")) {
+		ImGui::Text("Accumulator: %i", emulator.bus.cpu.acc);
+		ImGui::Text("X Register: %i", emulator.bus.cpu.xreg);
+		ImGui::Text("Y Register: %i", emulator.bus.cpu.yreg);
+		ImGui::Text("Stack Pointer: %i", emulator.bus.cpu.stkp);
+		ImGui::Text("Program Counter: %i", emulator.bus.cpu.pc);
+
+		ImGui::TreePop();
+	}
+
+	if (ImGui::TreeNode("Status")) {
+		ImGui::Text("Carry:             %i", emulator.bus.cpu.getFlag(nes6502::C));
+		ImGui::Text("Zero:              %i", emulator.bus.cpu.getFlag(nes6502::Z));
+		ImGui::Text("Interrupt Disable: %i", emulator.bus.cpu.getFlag(nes6502::I));
+		ImGui::Text("Decimal Mode:      %i", emulator.bus.cpu.getFlag(nes6502::D));
+		ImGui::Text("Break:             %i", emulator.bus.cpu.getFlag(nes6502::B));
+		ImGui::Text("Overflow:          %i", emulator.bus.cpu.getFlag(nes6502::O));
+		ImGui::Text("Negative:          %i", emulator.bus.cpu.getFlag(nes6502::N));
+
+		ImGui::TreePop();
+	}
+	ImGui::End();
+
+
+	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
+
+	renderMemoryWindow(emulator);
+
+	ImGui::PopStyleVar(1);
+
+	ImGui::ShowDemoWindow();
 
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -101,6 +149,68 @@ void Window::render(const Emulator& emulator) {
 		ImGui::RenderPlatformWindowsDefault();
 		glfwMakeContextCurrent(backup_current_context);
 	}
+}
+
+void Window::renderMemoryWindow(Emulator& emulator) {
+	ImGui::Begin("Memory");
+
+	size_t ramSize = emulator.bus.ram.size();
+	int numCols = 8;
+	int numRows = ramSize / numCols;
+	ImGuiTableFlags flags = ImGuiTableFlags_BordersOuter | ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg;
+
+	ImGui::Checkbox("Follow PC", &followPC);
+
+	if (followPC) {
+		int pcRow = emulator.bus.cpu.pc / numCols;
+		ImGuiStyle& style = ImGui::GetStyle();
+		float rowHeight = ImGui::GetTextLineHeight() + style.CellPadding.y * 2.0f + style.FramePadding.y * 2;
+		targetMemoryYScroll = pcRow*rowHeight;
+	}
+
+	if (ImGui::BeginTable("Ram", numCols + 1, flags)) {
+
+		ImGui::TableSetupColumn("Offset", ImGuiTableColumnFlags_WidthFixed, 60.0f);
+		for (int i = 0; i < numCols; i++) {
+			ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, 32.0f); // Fast, fixed-size columns
+		}
+
+		if (followPC) {
+			ImGui::SetScrollY(targetMemoryYScroll);
+		}
+
+		ImGuiListClipper clipper;
+		clipper.Begin(numRows);
+
+		while (clipper.Step()) {
+			for (int row = clipper.DisplayStart; row < clipper.DisplayEnd; ++row) {
+				ImGui::TableNextRow();
+
+				ImGui::TableSetColumnIndex(0);
+				ImGui::Text("%04X", row * numCols);
+
+				for (int col = 0; col < numCols; ++col) {
+					ImGui::TableSetColumnIndex(col + 1);
+
+					size_t byteIdx = row * numCols + col;
+					ImGui::PushID((int)byteIdx);
+					ImGui::PushItemWidth(-FLT_MIN);
+
+					uint8_t& data = emulator.bus.ram[byteIdx];
+
+					if (byteIdx < ramSize) {
+						ImGui::InputScalar("##data", ImGuiDataType_U8, &data, nullptr, nullptr, "%02X", ImGuiInputTextFlags_CharsHexadecimal);
+					}
+
+					ImGui::PopItemWidth();
+					ImGui::PopID();
+				}
+			}
+		}
+
+		ImGui::EndTable();
+	}
+	ImGui::End();
 }
 
 void Window::startFrame() {

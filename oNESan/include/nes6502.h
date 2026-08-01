@@ -49,6 +49,8 @@ public:
 	
 	bool complete();
 
+	uint8_t getFlag(FLAGS6502 f);
+
 // switch to private later
 private:
 	Bus* bus = nullptr;
@@ -57,7 +59,6 @@ private:
 	uint8_t read(uint16_t address);
 	void write(uint16_t address, uint8_t data);
 	
-	uint8_t getFlag(FLAGS6502 f);
 	void setFlag(FLAGS6502 f, bool v);
 
 	

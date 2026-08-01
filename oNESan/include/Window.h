@@ -8,8 +8,14 @@
 #include <imgui/imgui_impl_opengl3.h>
 
 #include <iostream>
+#include <algorithm>
 
 class Emulator;
+
+enum class EmulationMode {
+	Automatic,
+	Manual
+};
 
 class Window
 {
@@ -19,13 +25,22 @@ public:
 
 	void init();
 	void startFrame();
-	void render(const Emulator& emulator);
+	void render(Emulator& emulator);
 	void endFrame();
 
 	inline bool shouldExit() const { return glfwWindowShouldClose(m_window); }
+	inline EmulationMode getEmulationMode() const { return emulationMode; }
 private:
 	GLFWwindow* m_window;
 
 	int WIDTH = 800, HEIGHT = 600;
+	EmulationMode emulationMode = EmulationMode::Manual;
+
+	bool followPC = false;
+	float targetMemoryYScroll = 0.0f;
+
+	uint8_t testOperand = 0x00;
+
+	void renderMemoryWindow(Emulator& emulator);
 };
 

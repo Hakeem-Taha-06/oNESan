@@ -51,7 +51,9 @@ void nes6502::reset() {
 	acc = 0x00;
 	xreg = 0x00;
 	yreg = 0x00;
-	stat = 0x00;
+	stat = 0x01;
+
+	cycles = 0x00;
 }
 
 void nes6502::clock() {
@@ -262,7 +264,7 @@ uint8_t nes6502::LDA() {
 	return 0;
 }
 
-// Load X Register: Loads a byte of memory into the X register setting the zero and negative flags as appropriate
+// Load X: Loads a byte of memory into the X register setting the zero and negative flags as appropriate
 uint8_t nes6502::LDX() {
 	xreg = read(addr_abs);             // reads a byte of memory into the x register
 	setFlag(Z, xreg == 0);             // set the zero flag if the x register is zero
@@ -270,7 +272,7 @@ uint8_t nes6502::LDX() {
 	return 0;
 }
 
-// Load Y Register: Loads a byte of memory into the X register setting the zero and negative flags as appropriate
+// Load Y: Loads a byte of memory into the Y register setting the zero and negative flags as appropriate
 uint8_t nes6502::LDY() {
 	yreg = read(addr_abs);             // reads a byte of memory into the y register
 	setFlag(Z, yreg == 0);             // set the zero flag if the y register is zero
@@ -278,21 +280,25 @@ uint8_t nes6502::LDY() {
 	return 0;
 }
 
+// Store Accumulator: stores accumulator contents into a memory address
 uint8_t nes6502::STA() {
 	write(addr_abs, acc);
 	return 0;
 }
 
+// Store X: stores xreg contents into a memory address
 uint8_t nes6502::STX() {
 	write(addr_abs, xreg);
 	return 0;
 }
 
+// Store Y: stores yreg contents into a memory address
 uint8_t nes6502::STY() {
 	write(addr_abs, yreg);
 	return 0;
 }
 
+// Transfer Accumulator to X: transfers the contents of the accumulator to the xreg
 uint8_t nes6502::TAX() {
 	xreg = acc;
 	setFlag(Z, xreg == 0);             // set the zero flag if the x register is zero
@@ -300,6 +306,7 @@ uint8_t nes6502::TAX() {
 	return 0;
 }
 
+// Transfer Accumulator to Y: transfers the contents of the accumulator to the yreg
 uint8_t nes6502::TAY() {
 	yreg = acc;
 	setFlag(Z, yreg == 0);             // set the zero flag if the y register is zero
@@ -307,6 +314,7 @@ uint8_t nes6502::TAY() {
 	return 0;
 }
 
+// Transfer X to Accumulator: transfers the contents of the xreg to the accumulator
 uint8_t nes6502::TXA() {
 	acc = xreg;
 	setFlag(Z, acc == 0);             // set the zero flag if the accumulator is zero
@@ -314,10 +322,25 @@ uint8_t nes6502::TXA() {
 	return 0;
 }
 
+// Transfer Y to Accumulator: transfers the contents of the yreg to the accumulator
 uint8_t nes6502::TYA() {
 	acc = yreg;
 	setFlag(Z, acc == 0);             // set the zero flag if the accumulator is zero
 	setFlag(O, (acc & (1 << 7)) > 0); // set the overflow flag if the MSB is high
+	return 0;
+}
+
+// Transfer Stack Pointer to X: transfers the contents of the stack pointer to the xreg
+uint8_t nes6502::TSX() {
+	xreg = stkp;
+	setFlag(Z, xreg == 0);
+	setFlag(O, (xreg & (1 << 7)) > 0);
+	return 0;
+}
+
+// Transfer X to Stack Pointer: transfers the contents of the accumulator to the xreg
+uint8_t nes6502::TXS() {
+	stkp = xreg;
 	return 0;
 }
 
@@ -339,6 +362,5 @@ uint8_t nes6502::LSR() { return 0; } uint8_t nes6502::NOP() { return 0; } uint8_
 uint8_t nes6502::PHP() { return 0; } uint8_t nes6502::PLA() { return 0; } uint8_t nes6502::PLP() { return 0; } uint8_t nes6502::ROL() { return 0; }
 uint8_t nes6502::ROR() { return 0; } uint8_t nes6502::RTI() { return 0; } uint8_t nes6502::RTS() { return 0; } uint8_t nes6502::SBC() { return 0; }
 uint8_t nes6502::SEC() { return 0; } uint8_t nes6502::SED() { return 0; } uint8_t nes6502::SEI() { return 0; } 
-uint8_t nes6502::TSX() { return 0; } uint8_t nes6502::TXS() { return 0; }
 
 uint8_t nes6502::XXX() { return 0; }

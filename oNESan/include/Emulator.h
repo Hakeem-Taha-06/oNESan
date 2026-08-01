@@ -10,10 +10,12 @@ public:
 	Emulator();
 	~Emulator();
 
-	void clock();
-	void runTestProgram();
-private:
 	void init();
+	void clock();
+
+	void writeTestProgram();
 
 	Bus bus;
+
+	uint8_t testOperand = 0x00;
 };
