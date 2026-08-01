@@ -138,11 +138,11 @@ void Window::renderCPUWindow(Emulator& emulator) {
 	ImGui::Begin("CPU");
 
 	if (ImGui::TreeNode("Registers")) {
-		ImGui::Text("Accumulator: %i", emulator.bus.cpu.acc);
-		ImGui::Text("X Register: %i", emulator.bus.cpu.xreg);
-		ImGui::Text("Y Register: %i", emulator.bus.cpu.yreg);
-		ImGui::Text("Stack Pointer: %i", emulator.bus.cpu.stkp);
-		ImGui::Text("Program Counter: %i", emulator.bus.cpu.pc);
+		ImGui::Text("Accumulator:     0x%X", emulator.bus.cpu.acc);
+		ImGui::Text("X Register:      0x%X", emulator.bus.cpu.xreg);
+		ImGui::Text("Y Register:      0x%X", emulator.bus.cpu.yreg);
+		ImGui::Text("Stack Pointer:   0x%04X", emulator.bus.cpu.stkp);
+		ImGui::Text("Program Counter: 0x%04X", emulator.bus.cpu.pc);
 
 		ImGui::TreePop();
 	}
