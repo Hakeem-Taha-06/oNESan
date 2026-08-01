@@ -89,12 +89,34 @@ void Window::render(Emulator& emulator) {
 	// Create a dockspace that covers the entire viewport
 	ImGui::DockSpaceOverViewport(ImGui::GetMainViewport()->ID, ImGui::GetMainViewport());
 
+	renderControlWindow(emulator);
+	renderCPUWindow(emulator);
+
+	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
+	renderMemoryWindow(emulator);
+	ImGui::PopStyleVar(1);
+
+	ImGui::ShowDemoWindow();
+
+	ImGui::Render();
+	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+	if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+	{
+		GLFWwindow* backup_current_context = glfwGetCurrentContext();
+		ImGui::UpdatePlatformWindows();
+		ImGui::RenderPlatformWindowsDefault();
+		glfwMakeContextCurrent(backup_current_context);
+	}
+}
+
+void Window::renderControlWindow(Emulator& emulator) {
 	ImGui::Begin("Debug Window");
 	ImGui::Text("Value to be Put in Accumulator: ");
 
 	int value = emulator.testOperand;
 	value = std::clamp(value, 0, 255);
-	if(ImGui::InputInt("Value", &value)) {
+	if (ImGui::InputInt("Value", &value)) {
 		emulator.testOperand = value;
 	}
 	if (ImGui::Button("Reset Test Program")) {
@@ -104,7 +126,9 @@ void Window::render(Emulator& emulator) {
 		const_cast<Emulator&>(emulator).clock();
 	}
 	ImGui::End();
+}
 
+void Window::renderCPUWindow(Emulator& emulator) {
 	ImGui::Begin("CPU");
 
 	if (ImGui::TreeNode("Registers")) {
@@ -129,26 +153,6 @@ void Window::render(Emulator& emulator) {
 		ImGui::TreePop();
 	}
 	ImGui::End();
-
-
-	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
-
-	renderMemoryWindow(emulator);
-
-	ImGui::PopStyleVar(1);
-
-	ImGui::ShowDemoWindow();
-
-	ImGui::Render();
-	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-	if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-	{
-		GLFWwindow* backup_current_context = glfwGetCurrentContext();
-		ImGui::UpdatePlatformWindows();
-		ImGui::RenderPlatformWindowsDefault();
-		glfwMakeContextCurrent(backup_current_context);
-	}
 }
 
 void Window::renderMemoryWindow(Emulator& emulator) {
@@ -161,10 +165,11 @@ void Window::renderMemoryWindow(Emulator& emulator) {
 
 	ImGui::Checkbox("Follow PC", &followPC);
 
+	int pcRow = emulator.bus.cpu.pc / numCols;
+	ImGuiStyle& style = ImGui::GetStyle();
+	float rowHeight = ImGui::GetTextLineHeight() + style.CellPadding.y * 2.0f + style.FramePadding.y * 2;
+
 	if (followPC) {
-		int pcRow = emulator.bus.cpu.pc / numCols;
-		ImGuiStyle& style = ImGui::GetStyle();
-		float rowHeight = ImGui::GetTextLineHeight() + style.CellPadding.y * 2.0f + style.FramePadding.y * 2;
 		targetMemoryYScroll = pcRow*rowHeight;
 	}
 
@@ -172,7 +177,7 @@ void Window::renderMemoryWindow(Emulator& emulator) {
 
 		ImGui::TableSetupColumn("Offset", ImGuiTableColumnFlags_WidthFixed, 60.0f);
 		for (int i = 0; i < numCols; i++) {
-			ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, 32.0f); // Fast, fixed-size columns
+			ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, 32.0f);
 		}
 
 		if (followPC) {
@@ -198,9 +203,20 @@ void Window::renderMemoryWindow(Emulator& emulator) {
 
 					uint8_t& data = emulator.bus.ram[byteIdx];
 
+					bool isPcIdx = pcRow == row && emulator.bus.cpu.pc % numCols == col;
+					
+					// color the box where the program counter is
+					if (isPcIdx) 
+						ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.6f, 0.0f, 0.3f, 1.0f));
+
 					if (byteIdx < ramSize) {
 						ImGui::InputScalar("##data", ImGuiDataType_U8, &data, nullptr, nullptr, "%02X", ImGuiInputTextFlags_CharsHexadecimal);
 					}
+
+					// only pop the style color if we had pushed it above
+					if (isPcIdx) 
+						ImGui::PopStyleColor(1);
+					
 
 					ImGui::PopItemWidth();
 					ImGui::PopID();

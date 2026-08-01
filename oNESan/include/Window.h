@@ -34,13 +34,15 @@ private:
 	GLFWwindow* m_window;
 
 	int WIDTH = 800, HEIGHT = 600;
-	EmulationMode emulationMode = EmulationMode::Manual;
+	EmulationMode emulationMode = EmulationMode::Automatic;
 
 	bool followPC = false;
 	float targetMemoryYScroll = 0.0f;
 
 	uint8_t testOperand = 0x00;
 
+	void renderControlWindow(Emulator& emulator);
+	void renderCPUWindow(Emulator& emulator);
 	void renderMemoryWindow(Emulator& emulator);
 };
 
