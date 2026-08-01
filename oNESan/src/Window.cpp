@@ -1,7 +1,7 @@
 #include "Window.h"
 #include "Emulator.h"
 
-Window::Window(int width, int height): WIDTH(width), HEIGHT(height){
+Window::Window(int width, int height): WIDTH(width), HEIGHT(height), inputManager(){
 	init();
 }
 
@@ -33,8 +33,11 @@ void Window::init() {
 		exit(EXIT_FAILURE);
 	}
 
+	context = WindowContext{&inputManager};
+
 	glfwMakeContextCurrent(w);
 	glfwSwapInterval(1);
+	glfwSetWindowUserPointer(w, &context);
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		std::cout << "Failed to initialize GLAD";
@@ -78,9 +81,14 @@ void Window::init() {
 	ImGui_ImplOpenGL3_Init("#version 330");
 
 	m_window = w;
+
+	glfwSetKeyCallback(m_window, Window::keyEventCallback);
 }
 
 void Window::render(Emulator& emulator) {
+	
+	processInput();
+
 	//rendering
 	glClearColor(0.2f, 0.2f, 0.5f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -95,8 +103,6 @@ void Window::render(Emulator& emulator) {
 	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
 	renderMemoryWindow(emulator);
 	ImGui::PopStyleVar(1);
-
-	ImGui::ShowDemoWindow();
 
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -160,7 +166,7 @@ void Window::renderMemoryWindow(Emulator& emulator) {
 
 	size_t ramSize = emulator.bus.ram.size();
 	int numCols = 8;
-	int numRows = ramSize / numCols;
+	int numRows = (int)ramSize / numCols;
 	ImGuiTableFlags flags = ImGuiTableFlags_BordersOuter | ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg;
 
 	ImGui::Checkbox("Follow PC", &followPC);
@@ -216,7 +222,6 @@ void Window::renderMemoryWindow(Emulator& emulator) {
 					// only pop the style color if we had pushed it above
 					if (isPcIdx) 
 						ImGui::PopStyleColor(1);
-					
 
 					ImGui::PopItemWidth();
 					ImGui::PopID();
@@ -240,4 +245,26 @@ void Window::startFrame() {
 
 void Window::endFrame() {
 	glfwSwapBuffers(m_window);
+}
+
+void Window::keyEventCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+	auto context = static_cast<WindowContext*>(glfwGetWindowUserPointer(window));
+	
+	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+		if (context->emulationMode == EmulationMode::Manual)
+			context->emulationMode = EmulationMode::Automatic;
+		else if (context->emulationMode == EmulationMode::Automatic)
+			context->emulationMode = EmulationMode::Manual;
+	}
+	
+	if (action == GLFW_PRESS) {
+		context->input->setKeyState(key, true);
+	}
+	else if (action == GLFW_RELEASE) {
+		context->input->setKeyState(key, false);
+	}
+}
+
+void Window::processInput() {
+	
 }

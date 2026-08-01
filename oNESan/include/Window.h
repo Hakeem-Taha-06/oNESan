@@ -10,11 +10,18 @@
 #include <iostream>
 #include <algorithm>
 
+#include "InputManager.h"
+
 class Emulator;
 
 enum class EmulationMode {
 	Automatic,
 	Manual
+};
+
+struct WindowContext {
+	InputManager* input;
+	EmulationMode emulationMode = EmulationMode::Manual;
 };
 
 class Window
@@ -29,12 +36,16 @@ public:
 	void endFrame();
 
 	inline bool shouldExit() const { return glfwWindowShouldClose(m_window); }
-	inline EmulationMode getEmulationMode() const { return emulationMode; }
+	inline EmulationMode getEmulationMode() const { 
+		auto context = static_cast<WindowContext*>(glfwGetWindowUserPointer(m_window));
+		return context->emulationMode; 
+	}
 private:
 	GLFWwindow* m_window;
+	InputManager inputManager;
+	WindowContext context;
 
 	int WIDTH = 800, HEIGHT = 600;
-	EmulationMode emulationMode = EmulationMode::Automatic;
 
 	bool followPC = false;
 	float targetMemoryYScroll = 0.0f;
@@ -44,5 +55,8 @@ private:
 	void renderControlWindow(Emulator& emulator);
 	void renderCPUWindow(Emulator& emulator);
 	void renderMemoryWindow(Emulator& emulator);
+
+	static void keyEventCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
+	void processInput();
 };
 

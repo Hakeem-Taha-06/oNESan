@@ -107,6 +107,7 @@
     <ClInclude Include="include\Application.h" />
     <ClInclude Include="include\Bus.h" />
     <ClInclude Include="include\Emulator.h" />
+    <ClInclude Include="include\InputManager.h" />
     <ClInclude Include="include\Window.h" />
     <ClInclude Include="include\nes6502.h" />
   </ItemGroup>

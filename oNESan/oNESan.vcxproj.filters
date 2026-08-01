@@ -30,6 +30,7 @@
     <ClInclude Include="include\Application.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\InputManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dependencies\src\glad.c">
