@@ -257,6 +257,8 @@ uint8_t nes6502::REL() {
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // ---------------------------------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------------------------------
+
+// LOAD INSTRUCTIONS
 // Load Accumulator: Loads a byte of memory into the accumulator setting the zero and negative flags as appropriate
 uint8_t nes6502::LDA() {
 	acc = fetch();                  // reads a byte of memory into the accumulator
@@ -281,6 +283,7 @@ uint8_t nes6502::LDY() {
 	return 0;
 }
 
+// STORE INSTURCTIONS
 // Store Accumulator: stores accumulator contents into a memory address
 uint8_t nes6502::STA() {
 	write(addr_abs, acc);
@@ -299,6 +302,7 @@ uint8_t nes6502::STY() {
 	return 0;
 }
 
+// TRANSFER INSTURCTIONS
 // Transfer Accumulator to X: transfers the contents of the accumulator to the xreg
 uint8_t nes6502::TAX() {
 	xreg = acc;
@@ -342,6 +346,143 @@ uint8_t nes6502::TSX() {
 // Transfer X to Stack Pointer: transfers the contents of the accumulator to the xreg
 uint8_t nes6502::TXS() {
 	stkp = xreg;
+	return 0;
+}
+
+// BRANCH INSTURCTIONS
+// Branch if Carry Set: 
+uint8_t nes6502::BCS() {
+	if (getFlag(C) == 1) {
+		cycles++;
+		addr_abs = pc + addr_rel;
+
+		if ((addr_abs & 0xFF00) != (pc & 0xFF00))
+			cycles++;
+
+		pc = addr_abs;
+	}
+	return 0;
+}
+
+// Branch if Carry Clear
+uint8_t nes6502::BCC() {
+	if (getFlag(C) == 0) {
+		cycles++;
+		addr_abs = pc + addr_rel;
+
+		if ((addr_abs & 0xFF00) != (pc & 0xFF00))
+			cycles++;
+
+		pc = addr_abs;
+	}
+	return 0;
+}
+
+// Branch if Equal
+uint8_t nes6502::BEQ() {
+	if (getFlag(Z) == 1) {
+		cycles++;
+		addr_abs = pc + addr_rel;
+
+		if ((addr_abs & 0xFF00) != (pc & 0xFF00))
+			cycles++;
+
+		pc = addr_abs;
+	}
+	return 0;
+}
+
+// Branch if Not Equal
+uint8_t nes6502::BNE() {
+	if (getFlag(Z) == 0) {
+		cycles++;
+		addr_abs = pc + addr_rel;
+
+		if ((addr_abs & 0xFF00) != (pc & 0xFF00))
+			cycles++;
+
+		pc = addr_abs;
+	}
+	return 0;
+}
+
+// Branch if Overflow Set
+uint8_t nes6502::BVS() {
+	if (getFlag(O) == 1) {
+		cycles++;
+		addr_abs = pc + addr_rel;
+
+		if ((addr_abs & 0xFF00) != (pc & 0xFF00))
+			cycles++;
+
+		pc = addr_abs;
+	}
+	return 0;
+}
+
+// Branch if Overflow Clear
+uint8_t nes6502::BVC() {
+	if (getFlag(O) == 0) {
+		cycles++;
+		addr_abs = pc + addr_rel;
+
+		if ((addr_abs & 0xFF00) != (pc & 0xFF00))
+			cycles++;
+
+		pc = addr_abs;
+	}
+	return 0;
+}
+
+// Branch if Minus
+uint8_t nes6502::BMI() {
+	if (getFlag(N) == 1) {
+		cycles++;
+		addr_abs = pc + addr_rel;
+
+		if ((addr_abs & 0xFF00) != (pc & 0xFF00))
+			cycles++;
+
+		pc = addr_abs;
+	}
+	return 0;
+}
+
+// Branch if Positive
+uint8_t nes6502::BPL() {
+	if (getFlag(N) == 0) {
+		cycles++;
+		addr_abs = pc + addr_rel;
+
+		if ((addr_abs & 0xFF00) != (pc & 0xFF00))
+			cycles++;
+
+		pc = addr_abs;
+	}
+	return 0;
+}
+
+// Clear Carry Flag
+uint8_t nes6502::CLC() {
+	setFlag(C, false);
+	return 0;
+}
+
+// Clear Interrupt Disable Flag
+uint8_t nes6502::CLI() {
+	setFlag(I, false);
+	return 0;
+}
+
+// Clear Decimal Mode Flag
+uint8_t nes6502::CLD() {
+	setFlag(D, false);
+	return 0;
+}
+
+// Clear Overflow Flag
+uint8_t nes6502::CLV() {
+	setFlag(O, false);
 	return 0;
 }
 
