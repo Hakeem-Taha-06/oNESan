@@ -350,7 +350,8 @@ uint8_t nes6502::TXS() {
 }
 
 // BRANCH INSTURCTIONS
-// Branch if Carry Set: 
+
+// Branch if Carry Set 
 uint8_t nes6502::BCS() {
 	if (getFlag(C) == 1) {
 		cycles++;
@@ -493,11 +494,8 @@ uint8_t nes6502::JMP() {
 }
 
 // to be implemented
-uint8_t nes6502::ADC() { return 0; } uint8_t nes6502::AND() { return 0; } uint8_t nes6502::ASL() { return 0; } uint8_t nes6502::BCC() { return 0; }
-uint8_t nes6502::BCS() { return 0; } uint8_t nes6502::BEQ() { return 0; } uint8_t nes6502::BIT() { return 0; } uint8_t nes6502::BMI() { return 0; }
-uint8_t nes6502::BNE() { return 0; } uint8_t nes6502::BPL() { return 0; } uint8_t nes6502::BRK() { return 0; } uint8_t nes6502::BVC() { return 0; }
-uint8_t nes6502::BVS() { return 0; } uint8_t nes6502::CLC() { return 0; } uint8_t nes6502::CLD() { return 0; } uint8_t nes6502::CLI() { return 0; }
-uint8_t nes6502::CLV() { return 0; } uint8_t nes6502::CMP() { return 0; } uint8_t nes6502::CPX() { return 0; } uint8_t nes6502::CPY() { return 0; }
+uint8_t nes6502::ADC() { return 0; } uint8_t nes6502::AND() { return 0; } uint8_t nes6502::ASL() { return 0; } uint8_t nes6502::BIT() { return 0; } 
+uint8_t nes6502::BRK() { return 0; } uint8_t nes6502::CMP() { return 0; } uint8_t nes6502::CPX() { return 0; } uint8_t nes6502::CPY() { return 0; }
 uint8_t nes6502::DEC() { return 0; } uint8_t nes6502::DEX() { return 0; } uint8_t nes6502::DEY() { return 0; } uint8_t nes6502::EOR() { return 0; }
 uint8_t nes6502::INC() { return 0; } uint8_t nes6502::INX() { return 0; } uint8_t nes6502::INY() { return 0; } uint8_t nes6502::JSR() { return 0; } 
 uint8_t nes6502::LSR() { return 0; } uint8_t nes6502::NOP() { return 0; } uint8_t nes6502::ORA() { return 0; } uint8_t nes6502::PHA() { return 0; }
