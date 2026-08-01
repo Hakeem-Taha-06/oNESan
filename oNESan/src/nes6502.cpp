@@ -76,8 +76,9 @@ void nes6502::clock() {
 }
 
 uint8_t nes6502::fetch(){
-	fetched = read(pc++);
-	return 1;
+	if (lookup[opcode].addrmode != &nes6502::IMP)
+		fetched = read(addr_abs);
+	return fetched;
 }
 
 uint8_t nes6502::getFlag(FLAGS6502 f) {
@@ -102,7 +103,7 @@ uint8_t nes6502::IMP() {
 	return 0;
 }
 
-// Immediate: the next byte represents the target address and the pc is moved forward
+// Immediate: the next byte represents the target address 
 uint8_t nes6502::IMM() {
 	addr_abs = pc; // set the pc as the address then increment it
 	pc++;
@@ -258,7 +259,7 @@ uint8_t nes6502::REL() {
 // ---------------------------------------------------------------------------------------------------------
 // Load Accumulator: Loads a byte of memory into the accumulator setting the zero and negative flags as appropriate
 uint8_t nes6502::LDA() {
-	acc = read(addr_abs);           // reads a byte of memory into the accumulator
+	acc = fetch();                  // reads a byte of memory into the accumulator
 	setFlag(Z, acc == 0);           // set the zero flag if the accumulator is zero
 	setFlag(O, (acc & (1<<7)) > 0); // set the overflow flag if the MSB is high
 	return 0;
@@ -266,7 +267,7 @@ uint8_t nes6502::LDA() {
 
 // Load X: Loads a byte of memory into the X register setting the zero and negative flags as appropriate
 uint8_t nes6502::LDX() {
-	xreg = read(addr_abs);             // reads a byte of memory into the x register
+	xreg = fetch();                    // reads a byte of memory into the x register
 	setFlag(Z, xreg == 0);             // set the zero flag if the x register is zero
 	setFlag(O, (xreg & (1 << 7)) > 0); // set the overflow flag if the MSB is high
 	return 0;
@@ -274,7 +275,7 @@ uint8_t nes6502::LDX() {
 
 // Load Y: Loads a byte of memory into the Y register setting the zero and negative flags as appropriate
 uint8_t nes6502::LDY() {
-	yreg = read(addr_abs);             // reads a byte of memory into the y register
+	yreg = fetch();                    // reads a byte of memory into the y register
 	setFlag(Z, yreg == 0);             // set the zero flag if the y register is zero
 	setFlag(O, (yreg & (1 << 7)) > 0); // set the overflow flag if the MSB is high
 	return 0;
