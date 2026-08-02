@@ -52,12 +52,16 @@ public:
 	uint8_t getFlag(FLAGS6502 f) const;
 
 // switch to private later
-private:
+public:
 	Bus* bus = nullptr;
 
 	// for the cpu to use when executing instructions
 	uint8_t read(uint16_t address);
 	void write(uint16_t address, uint8_t data);
+
+	void push(uint8_t data);
+	uint8_t pop();
+	uint8_t peek();
 	
 	void setFlag(FLAGS6502 f, bool v);
 

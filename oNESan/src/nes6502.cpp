@@ -41,6 +41,19 @@ void nes6502::write(uint16_t address, uint8_t data) {
 	bus->write(address, data);
 }
 
+// stack operations
+void nes6502::push(uint8_t data) {
+	write(0x100 + stkp, data);
+	stkp--;
+}
+uint8_t nes6502::pop() {
+	stkp++;
+	return read(0x100 + stkp);
+}
+uint8_t nes6502::peek() {
+	return read(0x100 + stkp + 1);
+}
+
 void nes6502::reset() {
 	// Set program counter to reset vector stored at 0xFFFC/D
 	uint8_t lo = read(0xFFFC);
@@ -54,6 +67,52 @@ void nes6502::reset() {
 	stat = 0x00;
 
 	cycles = 0x00;
+	addr_abs = 0x0000;
+	addr_rel = 0x0000;
+	fetched = 0x00;
+
+	cycles = 8;
+}
+
+void nes6502::irq() {
+	if (getFlag(I) == 0) {
+
+		// Write the current pc to the stack
+		push((pc >> 8) & 0x00FF);   // the pc is in the stack in this order
+		push(pc & 0x00FF);		    //            -> LL HH
+
+		// Write the current status register, and set I
+		setFlag(B, 0);
+		setFlag(I, 1);
+		setFlag(U, 1);
+		push(stat);
+
+		// pc = Interrupt Request handler address
+		uint16_t lo = read(0xFFFE);
+		uint16_t hi = read(0xFFFF);
+		pc = (hi << 8) | lo;
+
+		cycles = 7;
+	}
+}
+
+void nes6502::nmi() {
+	// Write the current pc to the stack
+	push((pc >> 8) & 0x00FF);   // the pc is in the stack in this order
+	push(pc & 0x00FF);		    //            -> LL HH
+
+	// Write the current status register, and set I
+	setFlag(B, 0);
+	setFlag(I, 1);
+	setFlag(U, 1);
+	push(stat);
+
+	// pc = Non-Maskable Interrupt Request handler address
+	uint16_t lo = read(0xFFFA);
+	uint16_t hi = read(0xFFFB);
+	pc = (hi << 8) | lo;
+
+	cycles = 8;
 }
 
 void nes6502::clock() {
@@ -430,25 +489,25 @@ uint8_t nes6502::JMP() {
 
 // Clear Carry Flag
 uint8_t nes6502::CLC() {
-	setFlag(C, false);
+	setFlag(C, 0);
 	return 0;
 }
 
 // Clear Interrupt Disable Flag
 uint8_t nes6502::CLI() {
-	setFlag(I, false);
+	setFlag(I, 0);
 	return 0;
 }
 
 // Clear Decimal Mode Flag
 uint8_t nes6502::CLD() {
-	setFlag(D, false);
+	setFlag(D, 0);
 	return 0;
 }
 
 // Clear Overflow Flag
 uint8_t nes6502::CLV() {
-	setFlag(V, false);
+	setFlag(V, 0);
 	return 0;
 }
 
@@ -500,7 +559,7 @@ uint8_t nes6502::ASL() {
 
 	uint8_t result = fetch() << 1;
 	setFlag(C, fetched & 0x80);
-	setFlag(Z, result == 0);
+	setFlag(Z, result == 0x00);
 	setFlag(V, result & 0x80);
 	if (lookup[opcode].addrmode == &nes6502::IMP) {
 		acc = result;
@@ -511,14 +570,48 @@ uint8_t nes6502::ASL() {
 	return 1;
 }
 
+uint8_t nes6502::BIT() {
+	uint8_t result = acc & fetch();
+	setFlag(Z, result == 0x00);
+	setFlag(V, fetched & 0x40);
+	setFlag(N, fetched & 0x80);
+	return 0;
+}
+
+uint8_t nes6502::BRK() {
+
+	//setFlag(B, 1);
+	//setFlag(I, 1);
+	//
+	//uint16_t lo = read(0xFFFE);
+	//uint16_t hi = read(0xFFFF);
+	//pc = (hi << 8) | lo;
+
+	return 0;
+}
+
+uint8_t nes6502::RTI() {
+	
+	// Retrieve the Status Register
+	stat = pop();
+	setFlag(U, 0);
+	setFlag(B, 0);
+
+	// Retrieve the Program Counter
+	uint16_t lo = pop();
+	uint16_t hi = pop();
+
+	pc = (hi << 8) | lo;
+	return 0;
+}
+
 // to be implemented
-uint8_t nes6502::BIT() { return 0; } 
-uint8_t nes6502::BRK() { return 0; } uint8_t nes6502::CMP() { return 0; } uint8_t nes6502::CPX() { return 0; } uint8_t nes6502::CPY() { return 0; }
+uint8_t nes6502::CMP() { return 0; } uint8_t nes6502::CPX() { return 0; } uint8_t nes6502::CPY() { return 0; }
 uint8_t nes6502::DEC() { return 0; } uint8_t nes6502::DEX() { return 0; } uint8_t nes6502::DEY() { return 0; } uint8_t nes6502::EOR() { return 0; }
 uint8_t nes6502::INC() { return 0; } uint8_t nes6502::INX() { return 0; } uint8_t nes6502::INY() { return 0; } uint8_t nes6502::JSR() { return 0; } 
 uint8_t nes6502::LSR() { return 0; } uint8_t nes6502::NOP() { return 0; } uint8_t nes6502::ORA() { return 0; } uint8_t nes6502::PHA() { return 0; }
 uint8_t nes6502::PHP() { return 0; } uint8_t nes6502::PLA() { return 0; } uint8_t nes6502::PLP() { return 0; } uint8_t nes6502::ROL() { return 0; }
-uint8_t nes6502::ROR() { return 0; } uint8_t nes6502::RTI() { return 0; } uint8_t nes6502::RTS() { return 0; }
+uint8_t nes6502::ROR() { return 0; } uint8_t nes6502::RTS() { return 0; }
 uint8_t nes6502::SEC() { return 0; } uint8_t nes6502::SED() { return 0; } uint8_t nes6502::SEI() { return 0; } 
 
 uint8_t nes6502::XXX() { return 0; }

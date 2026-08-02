@@ -33,7 +33,7 @@ void Window::init() {
 		exit(EXIT_FAILURE);
 	}
 
-	context = WindowContext{&inputManager};
+	context = WindowContext{&inputManager, EmulationMode::Manual};
 
 	glfwMakeContextCurrent(w);
 	glfwSwapInterval(1);
@@ -126,11 +126,18 @@ void Window::renderControlWindow(Emulator& emulator) {
 		emulator.testOperand = value;
 	}
 	if (ImGui::Button("Reset Test Program")) {
-		const_cast<Emulator&>(emulator).writeTestProgram2();
+		emulator.writeTestProgram2();
 	}
 	if (ImGui::Button("Clock Emulator")) {
-		const_cast<Emulator&>(emulator).clock();
+		emulator.clock();
 	}
+	if (ImGui::Button("Push to Stack")) {
+		emulator.bus.cpu.push(0xBB);
+	}
+	if (ImGui::Button("Pop From Stack")) {
+		emulator.bus.cpu.pop();
+	}
+
 	ImGui::End();
 }
 
@@ -232,10 +239,14 @@ void Window::renderMemoryWindow(Emulator& emulator) {
 					uint8_t& data = emulator.bus.ram[byteIdx];
 
 					bool isPcIdx = emulator.bus.cpu.pc == byteIdx;
+					bool isStkIdx = emulator.bus.cpu.stkp + 0x100 == byteIdx;
 					
 					// color the box where the program counter is
 					if (isPcIdx) 
 						ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.6f, 0.0f, 0.3f, 1.0f));
+
+					if(isStkIdx)
+						ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.3f, 0.0f, 0.6f, 1.0f));
 
 					if (byteIdx < ramSize) {
 						ImGui::InputScalar("##data", ImGuiDataType_U8, &data, nullptr, nullptr, "%02X", ImGuiInputTextFlags_CharsHexadecimal);
@@ -243,6 +254,9 @@ void Window::renderMemoryWindow(Emulator& emulator) {
 
 					// only pop the style color if we had pushed it above
 					if (isPcIdx) 
+						ImGui::PopStyleColor(1);
+
+					if (isStkIdx)
 						ImGui::PopStyleColor(1);
 
 					ImGui::PopItemWidth();

@@ -20,7 +20,7 @@ enum class EmulationMode {
 };
 
 struct WindowContext {
-	InputManager* input;
+	InputManager* input = nullptr;
 	EmulationMode emulationMode = EmulationMode::Manual;
 };
 
