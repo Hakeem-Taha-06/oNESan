@@ -164,6 +164,7 @@ void Window::renderCPUWindow(Emulator& emulator) {
 void Window::renderMemoryWindow(Emulator& emulator) {
 	ImGui::Begin("Memory");
 
+	// setup
 	size_t ramSize = emulator.bus.ram.size();
 	int numCols = 8;
 	int numRows = (int)ramSize / numCols;
@@ -171,19 +172,40 @@ void Window::renderMemoryWindow(Emulator& emulator) {
 
 	ImGui::Checkbox("Follow PC", &followPC);
 
-	int pcRow = emulator.bus.cpu.pc / numCols;
-	ImGuiStyle& style = ImGui::GetStyle();
-	float rowHeight = ImGui::GetTextLineHeight() + style.CellPadding.y * 2.0f + style.FramePadding.y * 2;
-
 	if (followPC) {
+		// set target y scroll based on pc row
+		int pcRow = emulator.bus.cpu.pc / numCols;
+		ImGuiStyle& style = ImGui::GetStyle();
+		float rowHeight = ImGui::GetTextLineHeight() + style.CellPadding.y * 2.0f + style.FramePadding.y * 2;
 		targetMemoryYScroll = pcRow*rowHeight;
+	}
+
+	// Memory address search
+	bool wantSearch = false;
+	ImGui::Text("Search Address");
+	ImGui::InputScalar("##address", ImGuiDataType_U16, &searchAddress, nullptr, nullptr, "%04X", ImGuiInputTextFlags_CharsHexadecimal);
+	ImGui::SameLine();
+	if (ImGui::Button("GOTO") && !wantSearch) {
+		wantSearch = true;
+		followPC = false;
+		int searchRow = searchAddress / numCols;
+		ImGuiStyle& style = ImGui::GetStyle();
+		float rowHeight = ImGui::GetTextLineHeight() + style.CellPadding.y * 2.0f + style.FramePadding.y * 2;
+		targetMemoryYScroll = searchRow * rowHeight;
+
 	}
 
 	if (ImGui::BeginTable("Ram", numCols + 1, flags)) {
 
+		// set fixed width for columns
 		ImGui::TableSetupColumn("Offset", ImGuiTableColumnFlags_WidthFixed, 60.0f);
 		for (int i = 0; i < numCols; i++) {
 			ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, 32.0f);
+		}
+
+		if (wantSearch) {
+			ImGui::SetScrollY(targetMemoryYScroll);
+			wantSearch = false;
 		}
 
 		if (followPC) {
@@ -209,7 +231,7 @@ void Window::renderMemoryWindow(Emulator& emulator) {
 
 					uint8_t& data = emulator.bus.ram[byteIdx];
 
-					bool isPcIdx = pcRow == row && emulator.bus.cpu.pc % numCols == col;
+					bool isPcIdx = emulator.bus.cpu.pc == byteIdx;
 					
 					// color the box where the program counter is
 					if (isPcIdx) 

@@ -48,6 +48,7 @@ private:
 	int WIDTH = 800, HEIGHT = 600;
 
 	bool followPC = false;
+	uint16_t searchAddress = 0x0000;
 	float targetMemoryYScroll = 0.0f;
 
 	uint8_t testOperand = 0x00;
