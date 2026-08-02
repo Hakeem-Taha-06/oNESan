@@ -153,7 +153,7 @@ void Window::renderCPUWindow(Emulator& emulator) {
 		ImGui::Text("Interrupt Disable: %i", emulator.bus.cpu.getFlag(nes6502::I));
 		ImGui::Text("Decimal Mode:      %i", emulator.bus.cpu.getFlag(nes6502::D));
 		ImGui::Text("Break:             %i", emulator.bus.cpu.getFlag(nes6502::B));
-		ImGui::Text("Overflow:          %i", emulator.bus.cpu.getFlag(nes6502::O));
+		ImGui::Text("Overflow:          %i", emulator.bus.cpu.getFlag(nes6502::V));
 		ImGui::Text("Negative:          %i", emulator.bus.cpu.getFlag(nes6502::N));
 
 		ImGui::TreePop();

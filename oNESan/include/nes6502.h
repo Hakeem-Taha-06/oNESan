@@ -27,7 +27,7 @@ public:
 		D = (1 << 3), // Decimal mode
 		B = (1 << 4), // Break
 		U = (1 << 5), // Unused
-		O = (1 << 6), // Overflow
+		V = (1 << 6), // Overflow
 		N = (1 << 7), // Negative
 	};
 
@@ -49,7 +49,7 @@ public:
 	
 	bool complete();
 
-	uint8_t getFlag(FLAGS6502 f);
+	uint8_t getFlag(FLAGS6502 f) const;
 
 // switch to private later
 private:
@@ -95,6 +95,8 @@ private:
 
 	// Invalid/Illegal Opcodes
 	uint8_t XXX();
+
+	void _branch();
 
 	struct Instruction {
 		std::string name;                             // mnemonic for display in disassembler

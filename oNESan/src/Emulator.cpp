@@ -90,6 +90,8 @@ void Emulator::writeTestProgram() {
 	bus.write(0x022C, 0x00); //     ^ lo
 	bus.write(0x022D, 0x03); //     ^ hi
 
+	bus.write(0x22E, 0xA0);
+
 	bus.write(0x022E, 0x4C); // JMP $022E         (ABS)  infinite loop, marks clean end
 	bus.write(0x022F, 0x2E); //     ^ lo
 	bus.write(0x0230, 0x02); //     ^ hi
