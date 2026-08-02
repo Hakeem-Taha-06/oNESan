@@ -51,7 +51,7 @@ void nes6502::reset() {
 	acc = 0x00;
 	xreg = 0x00;
 	yreg = 0x00;
-	stat = 0x01;
+	stat = 0x00;
 
 	cycles = 0x00;
 }
@@ -512,7 +512,7 @@ uint8_t nes6502::ASL() {
 }
 
 // to be implemented
-uint8_t nes6502::ASL() { return 0; } uint8_t nes6502::BIT() { return 0; } 
+uint8_t nes6502::BIT() { return 0; } 
 uint8_t nes6502::BRK() { return 0; } uint8_t nes6502::CMP() { return 0; } uint8_t nes6502::CPX() { return 0; } uint8_t nes6502::CPY() { return 0; }
 uint8_t nes6502::DEC() { return 0; } uint8_t nes6502::DEX() { return 0; } uint8_t nes6502::DEY() { return 0; } uint8_t nes6502::EOR() { return 0; }
 uint8_t nes6502::INC() { return 0; } uint8_t nes6502::INX() { return 0; } uint8_t nes6502::INY() { return 0; } uint8_t nes6502::JSR() { return 0; } 

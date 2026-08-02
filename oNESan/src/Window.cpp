@@ -126,7 +126,7 @@ void Window::renderControlWindow(Emulator& emulator) {
 		emulator.testOperand = value;
 	}
 	if (ImGui::Button("Reset Test Program")) {
-		const_cast<Emulator&>(emulator).writeTestProgram();
+		const_cast<Emulator&>(emulator).writeTestProgram2();
 	}
 	if (ImGui::Button("Clock Emulator")) {
 		const_cast<Emulator&>(emulator).clock();

@@ -36,7 +36,7 @@ public:
 	uint8_t acc = 0x00;    // Accumulator
 	uint8_t xreg = 0x00;   // X Register
 	uint8_t yreg = 0x00;   // Y Register
-	uint8_t stat = 0x01;   // Status Register
+	uint8_t stat = 0x00;   // Status Register
 
 	
 	void clock();

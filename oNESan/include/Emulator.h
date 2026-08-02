@@ -14,6 +14,7 @@ public:
 	void clock();
 
 	void writeTestProgram();
+	void writeTestProgram2();
 
 	Bus bus;
 
