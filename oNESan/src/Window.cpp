@@ -118,13 +118,7 @@ void Window::render(Emulator& emulator) {
 
 void Window::renderControlWindow(Emulator& emulator) {
 	ImGui::Begin("Debug Window");
-	ImGui::Text("Value to be Put in Accumulator: ");
 
-	int value = emulator.testOperand;
-	value = std::clamp(value, 0, 255);
-	if (ImGui::InputInt("Value", &value)) {
-		emulator.testOperand = value;
-	}
 	if (ImGui::Button("Reset Test Program")) {
 		emulator.writeTestProgram2();
 	}

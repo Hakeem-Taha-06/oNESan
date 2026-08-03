@@ -17,6 +17,4 @@ public:
 	void writeTestProgram2();
 
 	Bus bus;
-
-	uint8_t testOperand = 0x00;
 };

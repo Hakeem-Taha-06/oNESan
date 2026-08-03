@@ -479,13 +479,71 @@ uint8_t nes6502::BPL() {
 	return 0;
 }
 
-// Jump: Sets the program counter to the address specified by the operand
-uint8_t nes6502::JMP() { 
-	pc = addr_abs; // set the program counter as the address
-	return 0; 
+// Break
+uint8_t nes6502::BRK() {
+
+	pc += 2;
+	push((pc >> 8) & 0x00FF);
+	push(pc & 0x00FF);
+
+	push(stat | B);
+	setFlag(I, 1);
+
+	uint16_t lo = read(0xFFFE);
+	uint16_t hi = read(0xFFFF);
+	pc = (hi << 8) | lo;
+
+	return 0;
 }
 
-// CLEAR INSTRUCTIONS
+// Return From Interrupt
+uint8_t nes6502::RTI() {
+
+	// Retrieve the Status Register
+	stat = pop();
+	setFlag(U, 0);
+	setFlag(B, 0);
+
+	// Retrieve the Program Counter
+	uint16_t lo = pop();
+	uint16_t hi = pop();
+
+	pc = (hi << 8) | lo;
+	return 0;
+}
+
+// Jump: Sets the program counter to the address specified by the operand
+uint8_t nes6502::JMP() {
+	pc = addr_abs; // set the program counter as the address
+	return 0;
+}
+
+// Jump to Subroutine
+uint8_t nes6502::JSR() {
+	pc += 2;
+	push((pc >> 8) & 0x00FF);
+	push(pc & 0x00FF);
+
+	pc = addr_abs;
+	return 0;
+}
+
+// Return from Subroutine
+uint8_t nes6502::RTS() {
+	uint16_t lo = pop();
+	uint16_t hi = pop();
+
+	pc = (hi << 8) | lo;
+	pc++;
+	return 0;
+}
+
+// FLAG SET/CLEAR INSTRUCTIONS
+
+uint8_t nes6502::SEC() {
+	setFlag(C, 1);
+	return 0;
+}
 
 // Clear Carry Flag
 uint8_t nes6502::CLC() {
@@ -493,9 +551,19 @@ uint8_t nes6502::CLC() {
 	return 0;
 }
 
+uint8_t nes6502::SEI() {
+	setFlag(I, 1);
+	return 0;
+}
+
 // Clear Interrupt Disable Flag
 uint8_t nes6502::CLI() {
 	setFlag(I, 0);
+	return 0;
+}
+
+uint8_t nes6502::SED() {
+	setFlag(D, 1);
 	return 0;
 }
 
@@ -544,12 +612,107 @@ uint8_t nes6502::SBC() {
 	return 1;
 }
 
+// Compare Accumulator
+uint8_t nes6502::CMP() {
+	uint8_t result = acc - fetch();
+	setFlag(C, result >= 0x00);
+	setFlag(Z, result == 0x00);
+	setFlag(N, result & 0x80);
+	return 1;
+}
+
+// Compare X 
+uint8_t nes6502::CPX() {
+	uint8_t result = xreg - fetch();
+	setFlag(C, result >= 0x00);
+	setFlag(Z, result == 0x00);
+	setFlag(N, result & 0x80);
+	return 1;
+}
+
+// Compare Y
+uint8_t nes6502::CPY() {
+	uint8_t result = yreg - fetch();
+	setFlag(C, result >= 0x00);
+	setFlag(Z, result == 0x00);
+	setFlag(N, result & 0x80);
+	return 1;
+}
+
+// Decrement Memory
+uint8_t nes6502::DEC() {
+	fetch();
+	fetched--;
+	setFlag(Z, fetched == 0x00);
+	setFlag(N, fetched & 0x80);
+	write(addr_abs, fetched);
+	return 0;
+}
+
+// Decrement X
+uint8_t nes6502::DEX() {
+	xreg--;
+	setFlag(Z, xreg == 0x00);
+	setFlag(N, xreg & 0x80);
+	return 0;
+}
+
+// Decrement Y
+uint8_t nes6502::DEY() {
+	yreg--;
+	setFlag(Z, yreg == 0x00);
+	setFlag(N, yreg & 0x80);
+	return 0;
+}
+
+// Increment Memory
+uint8_t nes6502::INC() {
+	fetch();
+	fetched++;
+	setFlag(Z, fetched == 0x00);
+	setFlag(N, fetched & 0x80);
+	write(addr_abs, fetched);
+	return 0;
+}
+
+// Increment X
+uint8_t nes6502::INX() {
+	xreg++;
+	setFlag(Z, xreg == 0x00);
+	setFlag(N, xreg & 0x80);
+	return 0;
+}
+
+// Increment Y
+uint8_t nes6502::INY() {
+	yreg++;
+	setFlag(Z, yreg == 0x00);
+	setFlag(N, yreg & 0x80);
+	return 0;
+}
+
 // LOGICAL OPERATIONS
 
-// Logical AND
+// Bitwise AND
 uint8_t nes6502::AND() {
 	acc = acc & fetch();
-	setFlag(Z, acc == 0);
+	setFlag(Z, acc == 0x00);
+	setFlag(N, acc & 0x80);
+	return 1;
+}
+
+// Bitwise OR
+uint8_t nes6502::ORA() {
+	acc = acc | fetch();
+	setFlag(Z, acc == 0x00);
+	setFlag(N, acc & 0x80);
+	return 1;
+}
+
+// Bitwise XOR
+uint8_t nes6502::EOR() {
+	acc = acc ^ fetch();
+	setFlag(Z, acc == 0x00);
 	setFlag(N, acc & 0x80);
 	return 1;
 }
@@ -567,9 +730,68 @@ uint8_t nes6502::ASL() {
 	else {
 		write(addr_abs, result);
 	}
-	return 1;
+	return 0;
 }
 
+// Logical Shift Right
+uint8_t nes6502::LSR() {
+	uint8_t initial;
+	uint8_t result;
+	if (lookup[opcode].addrmode == &nes6502::IMP) {
+		initial = acc;
+		result = initial >> 1;
+		acc = result;
+	}
+	else {
+		initial = fetch();
+		result = initial >> 1;
+		write(addr_abs, result);
+	}
+	setFlag(C, initial & 0x01);
+	setFlag(Z, result == 0x00);
+	setFlag(V, result & 0x80);
+	return 0;
+}
+
+uint8_t nes6502::ROL() {
+	uint8_t initial;
+	uint8_t result;
+	if (lookup[opcode].addrmode == &nes6502::IMP) {
+		initial = acc;
+		result = (acc << 1) + (getFlag(C) << 0);
+		acc = result;
+	}
+	else {
+		initial = fetch();
+		result = (fetched << 1) + (getFlag(C) << 0);
+		write(addr_abs, result);
+	}
+	setFlag(C, initial & 0x80);
+	setFlag(Z, result == 0x00);
+	setFlag(N, result & 0x80);
+	return 0;
+}
+
+uint8_t nes6502::ROR() {
+	uint8_t initial;
+	uint8_t result;
+	if (lookup[opcode].addrmode == &nes6502::IMP) {
+		initial = acc;
+		result = (acc >> 1) + (getFlag(C) << 8);
+		acc = result;
+	}
+	else {
+		initial = fetch();
+		result = (fetched >> 1) + (getFlag(C) << 8);
+		write(addr_abs, result);
+	}
+	setFlag(C, initial & 0x01);
+	setFlag(Z, result == 0x00);
+	setFlag(N, result & 0x80);
+	return 0;
+}
+
+// Bit Compare
 uint8_t nes6502::BIT() {
 	uint8_t result = acc & fetch();
 	setFlag(Z, result == 0x00);
@@ -578,40 +800,46 @@ uint8_t nes6502::BIT() {
 	return 0;
 }
 
-uint8_t nes6502::BRK() {
+// STACK OPERATIONS
 
-	//setFlag(B, 1);
-	//setFlag(I, 1);
-	//
-	//uint16_t lo = read(0xFFFE);
-	//uint16_t hi = read(0xFFFF);
-	//pc = (hi << 8) | lo;
-
+// Push Accumulator
+uint8_t nes6502::PHA() {
+	push(acc);
 	return 0;
 }
 
-uint8_t nes6502::RTI() {
-	
-	// Retrieve the Status Register
-	stat = pop();
-	setFlag(U, 0);
-	setFlag(B, 0);
-
-	// Retrieve the Program Counter
-	uint16_t lo = pop();
-	uint16_t hi = pop();
-
-	pc = (hi << 8) | lo;
+// Push Processor Status
+uint8_t nes6502::PHP() {
+	push(stat | B);
 	return 0;
 }
 
-// to be implemented
-uint8_t nes6502::CMP() { return 0; } uint8_t nes6502::CPX() { return 0; } uint8_t nes6502::CPY() { return 0; }
-uint8_t nes6502::DEC() { return 0; } uint8_t nes6502::DEX() { return 0; } uint8_t nes6502::DEY() { return 0; } uint8_t nes6502::EOR() { return 0; }
-uint8_t nes6502::INC() { return 0; } uint8_t nes6502::INX() { return 0; } uint8_t nes6502::INY() { return 0; } uint8_t nes6502::JSR() { return 0; } 
-uint8_t nes6502::LSR() { return 0; } uint8_t nes6502::NOP() { return 0; } uint8_t nes6502::ORA() { return 0; } uint8_t nes6502::PHA() { return 0; }
-uint8_t nes6502::PHP() { return 0; } uint8_t nes6502::PLA() { return 0; } uint8_t nes6502::PLP() { return 0; } uint8_t nes6502::ROL() { return 0; }
-uint8_t nes6502::ROR() { return 0; } uint8_t nes6502::RTS() { return 0; }
-uint8_t nes6502::SEC() { return 0; } uint8_t nes6502::SED() { return 0; } uint8_t nes6502::SEI() { return 0; } 
+// Pull Accumulator
+uint8_t nes6502::PLA() {
+	acc = pop();
+	setFlag(Z, acc == 0x00);
+	setFlag(N, acc & 0x80);
+	return 0;
+}
 
-uint8_t nes6502::XXX() { return 0; }
+// Pull Processor Status
+uint8_t nes6502::PLP() {
+	uint8_t newStat = pop();
+	setFlag(C, newStat & C);
+	setFlag(Z, newStat & Z);
+	setFlag(I, newStat & I); // TODO: should be delayed until one instruction later
+	setFlag(D, newStat & D);
+	setFlag(V, newStat & V);
+	setFlag(N, newStat & N);
+	return 0;
+}
+
+// No Operation
+uint8_t nes6502::NOP() {
+	return 0;
+}
+
+// Placeholder for illegal instructions
+uint8_t nes6502::XXX() { 
+	return 0; 
+}
