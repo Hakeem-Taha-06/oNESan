@@ -481,8 +481,13 @@ uint8_t nes6502::BPL() {
 
 // Break
 uint8_t nes6502::BRK() {
-	pc++;                     // from the wiki "Although BRK only uses 1 byte, its return address skips the following byte."
-	                          // "Because BRK skips the following byte, it is often considered a 2-byte instruction."
+	// i commented this out because reading the opcode + IMM addressing mode already advance the pc once each,
+	// so there shouldn't be a need to advance it again in the instruction itself 
+	// (this was tested against https://github.com/Klaus2m5/6502_65C02_functional_tests/blob/master/6502_functional_test.a65)
+	// (commenting this line causes the test it would otherwise fail in to pass, checking manually verifies the pushed address to be 1 higher than it should be)
+	//pc++;                     // from the wiki "Although BRK only uses 1 byte, its return address skips the following byte."
+	                            // "Because BRK skips the following byte, it is often considered a 2-byte instruction."
+	
 	push((pc >> 8) & 0x00FF);
 	push(pc & 0x00FF);
 
