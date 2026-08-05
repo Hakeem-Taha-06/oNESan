@@ -48,8 +48,12 @@ private:
 
 	int WIDTH = 800, HEIGHT = 600;
 
+	const int MAX_CLOCKS = 100000;
+
 	std::string testRomPath = "src/tests/6502_functional_test.bin";
 	bool followPC = false;
+	int testClocks = 0;
+	uint16_t targetPC = 0x0000;
 	uint16_t searchAddress = 0x0000;
 	float targetMemoryYScroll = 0.0f;
 

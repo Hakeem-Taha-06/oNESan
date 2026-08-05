@@ -128,14 +128,27 @@ void Window::renderControlWindow(Emulator& emulator) {
 			std::cerr << e.what() << std::endl;
 		}
 	}
+
 	if (ImGui::Button("Clock Emulator")) {
 		emulator.clock();
 	}
-	if (ImGui::Button("Push to Stack")) {
-		emulator.bus.cpu.push(0xBB);
+
+	ImGui::InputInt("##testClocks", &testClocks);
+	ImGui::SameLine();
+	if(ImGui::Button("Clock # Times")) {
+		while (testClocks > 0) {
+			emulator.clock();
+			testClocks--;
+		}
 	}
-	if (ImGui::Button("Pop From Stack")) {
-		emulator.bus.cpu.pop();
+
+	ImGui::InputScalar("##targetPC", ImGuiDataType_U16, &targetPC, nullptr, nullptr, "%04X", ImGuiInputTextFlags_CharsHexadecimal);
+	ImGui::SameLine();
+	if (ImGui::Button("Clock Until Address")) {
+		for (int i = 0; i < MAX_CLOCKS; ++i) {
+			emulator.clock();
+			if (emulator.bus.cpu.pc >= targetPC) break;
+		}
 	}
 
 	ImGui::End();
@@ -144,27 +157,22 @@ void Window::renderControlWindow(Emulator& emulator) {
 void Window::renderCPUWindow(Emulator& emulator) {
 	ImGui::Begin("CPU");
 
-	if (ImGui::TreeNode("Registers")) {
-		ImGui::Text("Accumulator:     0x%02X", emulator.bus.cpu.acc);
-		ImGui::Text("X Register:      0x%02X", emulator.bus.cpu.xreg);
-		ImGui::Text("Y Register:      0x%02X", emulator.bus.cpu.yreg);
-		ImGui::Text("Stack Pointer:   0x%04X", emulator.bus.cpu.stkp);
-		ImGui::Text("Program Counter: 0x%04X", emulator.bus.cpu.pc);
+	ImGui::Text("Accumulator:     0x%02X", emulator.bus.cpu.acc);
+	ImGui::Text("X Register:      0x%02X", emulator.bus.cpu.xreg);
+	ImGui::Text("Y Register:      0x%02X", emulator.bus.cpu.yreg);
+	ImGui::Text("Stack Pointer:   0x%04X", emulator.bus.cpu.stkp);
+	ImGui::Text("Program Counter: 0x%04X", emulator.bus.cpu.pc);
 
-		ImGui::TreePop();
-	}
+	ImGui::Separator();
 
-	if (ImGui::TreeNode("Status")) {
-		ImGui::Text("Carry:             %i", emulator.bus.cpu.getFlag(nes6502::C));
-		ImGui::Text("Zero:              %i", emulator.bus.cpu.getFlag(nes6502::Z));
-		ImGui::Text("Interrupt Disable: %i", emulator.bus.cpu.getFlag(nes6502::I));
-		ImGui::Text("Decimal Mode:      %i", emulator.bus.cpu.getFlag(nes6502::D));
-		ImGui::Text("Break:             %i", emulator.bus.cpu.getFlag(nes6502::B));
-		ImGui::Text("Overflow:          %i", emulator.bus.cpu.getFlag(nes6502::V));
-		ImGui::Text("Negative:          %i", emulator.bus.cpu.getFlag(nes6502::N));
+	ImGui::Text("Carry:             %i", emulator.bus.cpu.getFlag(nes6502::C));
+	ImGui::Text("Zero:              %i", emulator.bus.cpu.getFlag(nes6502::Z));
+	ImGui::Text("Interrupt Disable: %i", emulator.bus.cpu.getFlag(nes6502::I));
+	ImGui::Text("Decimal Mode:      %i", emulator.bus.cpu.getFlag(nes6502::D));
+	ImGui::Text("Break:             %i", emulator.bus.cpu.getFlag(nes6502::B));
+	ImGui::Text("Overflow:          %i", emulator.bus.cpu.getFlag(nes6502::V));
+	ImGui::Text("Negative:          %i", emulator.bus.cpu.getFlag(nes6502::N));
 
-		ImGui::TreePop();
-	}
 	ImGui::End();
 }
 

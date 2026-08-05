@@ -112,7 +112,7 @@ void nes6502::nmi() {
 	uint16_t hi = read(0xFFFB);
 	pc = (hi << 8) | lo;
 
-	cycles = 8;
+	cycles = 7;
 }
 
 void nes6502::clock() {
@@ -642,11 +642,10 @@ uint8_t nes6502::CPY() {
 
 // Decrement Memory
 uint8_t nes6502::DEC() {
-	fetch();
-	fetched--;
-	setFlag(Z, fetched == 0x00);
-	setFlag(N, fetched & 0x80);
-	write(addr_abs, fetched);
+	uint8_t result = fetch() - 1;
+	setFlag(Z, result == 0x00);
+	setFlag(N, result & 0x80);
+	write(addr_abs, result);
 	return 0;
 }
 
@@ -724,7 +723,7 @@ uint8_t nes6502::ASL() {
 	uint8_t result = fetch() << 1;
 	setFlag(C, fetched & 0x80);
 	setFlag(Z, result == 0x00);
-	setFlag(V, result & 0x80);
+	setFlag(N, result & 0x80);
 	if (lookup[opcode].addrmode == &nes6502::IMP) {
 		acc = result;
 	}
@@ -750,7 +749,7 @@ uint8_t nes6502::LSR() {
 	}
 	setFlag(C, initial & 0x01);
 	setFlag(Z, result == 0x00);
-	setFlag(V, result & 0x80);
+	setFlag(N, result & 0x80);
 	return 0;
 }
 
