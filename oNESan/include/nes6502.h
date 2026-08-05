@@ -70,7 +70,7 @@ public:
 	uint8_t opcode = 0x00;        // the instruction byte
 	uint8_t cycles = 0;		      // number of cycles left for an instruction
 	uint16_t addr_abs = 0x0000;   // this address is modified based on the addressing mode
-	uint8_t addr_rel = 0x00;      // for jump instructions that use relative addresses
+	uint16_t addr_rel = 0x00;     // for jump instructions that use relative addresses
 
 
 	//Addressing modes

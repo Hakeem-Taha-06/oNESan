@@ -136,9 +136,9 @@ void Window::renderControlWindow(Emulator& emulator) {
 	ImGui::InputInt("##testClocks", &testClocks);
 	ImGui::SameLine();
 	if(ImGui::Button("Clock # Times")) {
-		while (testClocks > 0) {
+		
+		for (int i = 0; i < testClocks; ++i) {
 			emulator.clock();
-			testClocks--;
 		}
 	}
 
