@@ -1,6 +1,10 @@
 #pragma once
 
+#include <fstream>
+#include <vector>
+#include <cstdint>
 #include <iostream>
+#include <stdexcept>
 
 #include "Bus.h"
 #include "nes6502.h"
@@ -12,9 +16,7 @@ public:
 
 	void init();
 	void clock();
-
-	void writeTestProgram();
-	void writeTestProgram2();
+	void load(const std::string& path);
 
 	Bus bus;
 };

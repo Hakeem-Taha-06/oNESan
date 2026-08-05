@@ -481,12 +481,12 @@ uint8_t nes6502::BPL() {
 
 // Break
 uint8_t nes6502::BRK() {
-
-	pc += 2;
+	pc++;                     // from the wiki "Although BRK only uses 1 byte, its return address skips the following byte."
+	                          // "Because BRK skips the following byte, it is often considered a 2-byte instruction."
 	push((pc >> 8) & 0x00FF);
 	push(pc & 0x00FF);
 
-	push(stat | B);
+	push(stat | B | U);
 	setFlag(I, 1);
 
 	uint16_t lo = read(0xFFFE);
@@ -501,7 +501,7 @@ uint8_t nes6502::RTI() {
 
 	// Retrieve the Status Register
 	stat = pop();
-	setFlag(U, 0);
+	setFlag(U, 1);
 	setFlag(B, 0);
 
 	// Retrieve the Program Counter
@@ -520,7 +520,8 @@ uint8_t nes6502::JMP() {
 
 // Jump to Subroutine
 uint8_t nes6502::JSR() {
-	pc += 2;
+	pc--;                    // ABS already advances the pc twice,
+	                         // but JSR should push the address of its last byte since RTS advances it by one thus landing on the next instruction 
 	push((pc >> 8) & 0x00FF);
 	push(pc & 0x00FF);
 
@@ -607,7 +608,7 @@ uint8_t nes6502::SBC() {
 	setFlag(N, result & 0x80);
 
 	// (V = A'MR + AM'R'), could also be (V = (A^R) & (A^M')')
-	setFlag(V, ((~((uint16_t)acc ^ (uint16_t)inverted) & (uint16_t)acc ^ result)) & 0x0080);
+	setFlag(V, ((~((uint16_t)acc ^ (uint16_t)inverted) & ((uint16_t)acc ^ result))) & 0x0080);
 	acc = result & 0x00FF;
 	return 1;
 }
@@ -615,7 +616,7 @@ uint8_t nes6502::SBC() {
 // Compare Accumulator
 uint8_t nes6502::CMP() {
 	uint8_t result = acc - fetch();
-	setFlag(C, result >= 0x00);
+	setFlag(C, acc >= fetched);
 	setFlag(Z, result == 0x00);
 	setFlag(N, result & 0x80);
 	return 1;
@@ -624,7 +625,7 @@ uint8_t nes6502::CMP() {
 // Compare X 
 uint8_t nes6502::CPX() {
 	uint8_t result = xreg - fetch();
-	setFlag(C, result >= 0x00);
+	setFlag(C, acc >= fetched);
 	setFlag(Z, result == 0x00);
 	setFlag(N, result & 0x80);
 	return 1;
@@ -633,7 +634,7 @@ uint8_t nes6502::CPX() {
 // Compare Y
 uint8_t nes6502::CPY() {
 	uint8_t result = yreg - fetch();
-	setFlag(C, result >= 0x00);
+	setFlag(C, acc >= fetched);
 	setFlag(Z, result == 0x00);
 	setFlag(N, result & 0x80);
 	return 1;
@@ -777,12 +778,12 @@ uint8_t nes6502::ROR() {
 	uint8_t result;
 	if (lookup[opcode].addrmode == &nes6502::IMP) {
 		initial = acc;
-		result = (acc >> 1) + (getFlag(C) << 8);
+		result = (acc >> 1) + (getFlag(C) << 7);
 		acc = result;
 	}
 	else {
 		initial = fetch();
-		result = (fetched >> 1) + (getFlag(C) << 8);
+		result = (fetched >> 1) + (getFlag(C) << 7);
 		write(addr_abs, result);
 	}
 	setFlag(C, initial & 0x01);
@@ -810,7 +811,7 @@ uint8_t nes6502::PHA() {
 
 // Push Processor Status
 uint8_t nes6502::PHP() {
-	push(stat | B);
+	push(stat | B | U);
 	return 0;
 }
 

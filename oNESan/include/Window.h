@@ -6,6 +6,7 @@
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
+#include <imgui/imgui_stdlib.h>
 
 #include <iostream>
 #include <algorithm>
@@ -47,11 +48,10 @@ private:
 
 	int WIDTH = 800, HEIGHT = 600;
 
+	std::string testRomPath = "src/tests/6502_functional_test.bin";
 	bool followPC = false;
 	uint16_t searchAddress = 0x0000;
 	float targetMemoryYScroll = 0.0f;
-
-	uint8_t testOperand = 0x00;
 
 	void renderControlWindow(Emulator& emulator);
 	void renderCPUWindow(Emulator& emulator);

@@ -49,6 +49,7 @@ void Window::init() {
 
 	glViewport(0, 0, WIDTH, HEIGHT);
 
+	glfwSetKeyCallback(w, Window::keyEventCallback);
 	//setGLFWEventCallbacks(w);
 
 	// Setup Dear ImGui context (all debug ui stuff can be moved to a separate ui class)
@@ -82,7 +83,6 @@ void Window::init() {
 
 	m_window = w;
 
-	glfwSetKeyCallback(m_window, Window::keyEventCallback);
 }
 
 void Window::render(Emulator& emulator) {
@@ -119,8 +119,14 @@ void Window::render(Emulator& emulator) {
 void Window::renderControlWindow(Emulator& emulator) {
 	ImGui::Begin("Debug Window");
 
-	if (ImGui::Button("Reset Test Program")) {
-		emulator.writeTestProgram2();
+	if (ImGui::InputText("##RomPath", &testRomPath, ImGuiInputTextFlags_EnterReturnsTrue) 
+		||ImGui::Button("Load Test ROM")) {
+		try {
+			emulator.load(testRomPath);
+		}
+		catch (std::exception e) {
+			std::cerr << e.what() << std::endl;
+		}
 	}
 	if (ImGui::Button("Clock Emulator")) {
 		emulator.clock();
@@ -167,7 +173,7 @@ void Window::renderMemoryWindow(Emulator& emulator) {
 
 	// setup
 	size_t ramSize = emulator.bus.ram.size();
-	int numCols = 8;
+	int numCols = 16;
 	int numRows = (int)ramSize / numCols;
 	ImGuiTableFlags flags = ImGuiTableFlags_BordersOuter | ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg;
 

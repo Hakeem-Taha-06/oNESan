@@ -3,7 +3,7 @@
 Bus::Bus() {
 	cpu.connectBus(this);
 
-	for (auto& i : ram) i = 0xEA; //NOP
+	for (auto& i : ram) i = 0x00; //BRK
 }
 
 Bus::~Bus() {
