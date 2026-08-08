@@ -1,0 +1,37 @@
+5/8/2026
+Branching misbehaving:
+what happens is that the JMP to address 0x0433 happens, landing on the BNE which branches to 0x0527, i think what should happen is that it actually branched backwards to 0x0429, but it falsely calculates it as a big forward jump, the operand for BNE is F4, which if treated as an 8 bit positive value it evaluates to 244 in decimal, but if it is correctly treated as a negative number, it should be -12, which would put us at 0x0429 correctly.
+
+CONCLUSION: 
+addr_rel type was uint8_t instead of uint16_t, so negative numbers where truncated in REL (fml this took two days to realize)
+
+----------------------------------------------------------------------
+5/8/2026
+BRK return address higher than it should be by 1:
+
+1- @37d5 when checking for the return address pushed to the stack from a previous break instruction that occurred at 0x09CF, the value pushed to the stack is actually 0x09D2, 1 higher than the what it should be (0x09D1), the instruction itself advances the pc, and the addressing mode which should be IMP which doesn't advance the pc.
+
+2- looking at the lookup table, the addressing mode for 0x00 (BRK) is actually IMM, so it does advance the pc there, should that mean that BRK shouldn't actually advance the pc itself? the docs say that it pushes (pc + 2), i should see how many times the pc is incremented at that exact moment.
+
+3- so, reading the opcode advances once, IMM advances again, which should be enough, so BRK shouldn't actually advance the pc.
+
+4- but javidx9's implementation has pc advancing in all three places, could this be a bug he fixes later?
+
+CONCLUSION:
+BRK shouldn't advance the pc since two bytes are already skipped via reading the opcode and the IMM addressing mode.
+
+----------------------------------------------------------------------
+8/8/2026
+Zero Page addressing issue:
+
+1- @0F30 the trap has something to do with zp indexing not wrapping around, i suspect it might be a similar issue to the branching misbehaving due to being a uint8_t instead of a uint16_t, i will try changing it and see what happens.
+
+2- that wasn't the issue, the actual issue was there was a loop that is supposed to decrement the y register starting from FD to FA, and it loops by 
+"
+CPY #$FA 
+BCS beginning
+"
+but CPY didn't set the carry flag properly for it to loop, because i had copied the logic from CMP and forgot to replace the accumulator with the y register, same thing with CPX.
+
+CONCLUSION:
+Copy-Paste bug

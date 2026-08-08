@@ -38,6 +38,8 @@ public:
 	uint8_t yreg = 0x00;   // Y Register
 	uint8_t stat = 0x00;   // Status Register
 
+	int totalCycles = 0;
+
 	
 	void clock();
 	void reset();

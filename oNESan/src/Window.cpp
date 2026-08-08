@@ -173,6 +173,7 @@ void Window::renderCPUWindow(Emulator& emulator) {
 	ImGui::Text("Overflow:          %i", emulator.bus.cpu.getFlag(nes6502::V));
 	ImGui::Text("Negative:          %i", emulator.bus.cpu.getFlag(nes6502::N));
 
+	ImGui::Text("Total Cycles:      %i", emulator.bus.cpu.totalCycles);
 	ImGui::End();
 }
 

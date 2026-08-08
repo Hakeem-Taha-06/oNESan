@@ -131,6 +131,7 @@ void nes6502::clock() {
 		cycles += (additionalCycle1 & additionalCycle2);
 	}
 
+	totalCycles++;
 	cycles--;
 }
 
@@ -481,10 +482,11 @@ uint8_t nes6502::BPL() {
 
 // Break
 uint8_t nes6502::BRK() {
-	// i commented this out because reading the opcode + IMM addressing mode already advance the pc once each,
+	// I commented this out because reading the opcode + IMM addressing mode already advance the pc once each,
 	// so there shouldn't be a need to advance it again in the instruction itself 
 	// (this was tested against https://github.com/Klaus2m5/6502_65C02_functional_tests/blob/master/6502_functional_test.a65)
 	// (commenting this line causes the test it would otherwise fail in to pass, checking manually verifies the pushed address to be 1 higher than it should be)
+	
 	//pc++;                     // from the wiki "Although BRK only uses 1 byte, its return address skips the following byte."
 	                            // "Because BRK skips the following byte, it is often considered a 2-byte instruction."
 	
@@ -630,7 +632,7 @@ uint8_t nes6502::CMP() {
 // Compare X 
 uint8_t nes6502::CPX() {
 	uint8_t result = xreg - fetch();
-	setFlag(C, acc >= fetched);
+	setFlag(C, xreg >= fetched);
 	setFlag(Z, result == 0x00);
 	setFlag(N, result & 0x80);
 	return 1;
@@ -639,7 +641,7 @@ uint8_t nes6502::CPX() {
 // Compare Y
 uint8_t nes6502::CPY() {
 	uint8_t result = yreg - fetch();
-	setFlag(C, acc >= fetched);
+	setFlag(C, yreg >= fetched);
 	setFlag(Z, result == 0x00);
 	setFlag(N, result & 0x80);
 	return 1;

@@ -29,7 +29,8 @@ void Emulator::load(const std::string& path) {
 		throw std::runtime_error("Failed to read file: " + path);
 		
 	for (int i = 0; i < size; ++i)
-		bus.write(0x0000 + (uint16_t)i, buffer[i]);
+		// should start from 0x0000 but the klaus test rom always assembles with a 10 byte offset for some reason, this is temporary anyways and will be replaced 
+		bus.write(0x000a + (uint16_t)i, buffer[i]); 
 
 	init();
 }
