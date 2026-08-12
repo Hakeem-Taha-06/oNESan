@@ -30,15 +30,15 @@ nes6502::~nes6502() {
 
 }
 
-void nes6502::connectBus(Bus* b) {
+void nes6502::connectBus(TestBus* b) {
 	bus = b;
 }
 
 uint8_t nes6502::read(uint16_t address) {
-	return bus->read(address);
+	return bus->cpuRead(address);
 }
 void nes6502::write(uint16_t address, uint8_t data) {
-	bus->write(address, data);
+	bus->cpuWrite(address, data);
 }
 
 // stack operations
@@ -849,4 +849,87 @@ uint8_t nes6502::NOP() {
 // Placeholder for illegal instructions
 uint8_t nes6502::XXX() { 
 	return 0; 
+}
+
+
+std::map<int, std::string> nes6502::disassemble(uint16_t startAddr, uint16_t endAddr) {
+	std::map<int, std::string> lines;
+	
+	uint16_t currentAddr = startAddr;
+	std::string instr = "";
+
+	auto hex = [](int num) {
+		return "0123456789ABCDEF"[num];
+	};
+
+	while (currentAddr <= endAddr) {
+		uint16_t lineAddr = currentAddr;
+		instr = "#";
+		instr += hex(lineAddr >> 12 & 0x000F);
+		instr += hex(lineAddr >> 8 & 0x000F);
+		instr += hex(lineAddr >> 4 & 0x000F);
+		instr += hex(lineAddr >> 0 & 0x000F);
+	
+		opcode = bus->cpuRead(currentAddr);
+		instr += " " + lookup[opcode].name;
+		if (lookup[opcode].addrmode == &nes6502::IMP) {
+			instr += " {IMP}";
+		}
+		else if (lookup[opcode].addrmode == &nes6502::IMM) {
+			currentAddr++;
+			instr += " #$";
+			uint8_t operand = bus->cpuRead(currentAddr);
+			instr += hex(operand>>4 & 0x000F);
+			instr += hex(operand>>0 & 0x000F);
+			instr += " {IMM}";
+		}
+		else if (lookup[opcode].addrmode == &nes6502::ZP0) {
+			currentAddr++;
+			instr += " {ZP0}";
+		}
+		else if (lookup[opcode].addrmode == &nes6502::ZPX) {
+			currentAddr++;
+			instr += " {ZPX}";
+		}
+		else if (lookup[opcode].addrmode == &nes6502::ZPY) {
+			currentAddr++;
+			instr += " {ZPY}";
+		}
+		else if (lookup[opcode].addrmode == &nes6502::IND) {
+			currentAddr++;
+			currentAddr++;
+			instr += " {IND}";
+		}
+		else if (lookup[opcode].addrmode == &nes6502::IZX) {
+			currentAddr++;
+			instr += " {IZX}";
+		}
+		else if (lookup[opcode].addrmode == &nes6502::IZY) {
+			currentAddr++;
+			instr += " {IZY}";
+		}
+		else if (lookup[opcode].addrmode == &nes6502::ABS) {
+			currentAddr++;
+			currentAddr++;
+			instr += " {ABS}";
+		}
+		else if (lookup[opcode].addrmode == &nes6502::ABX) {
+			currentAddr++;
+			currentAddr++;
+			instr += " {ABX}";
+		}
+		else if (lookup[opcode].addrmode == &nes6502::ABY) {
+			currentAddr++;
+			currentAddr++;
+			instr += " {ABY}";
+		}
+		else if (lookup[opcode].addrmode == &nes6502::REL) {
+			currentAddr++;
+			instr += " {REL}";
+		}
+
+		lines[lineAddr] = instr;
+		currentAddr++;
+	}
+	return lines;
 }

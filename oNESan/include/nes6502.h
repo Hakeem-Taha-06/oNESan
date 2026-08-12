@@ -7,9 +7,11 @@
 #include <cstdint>
 
 #include <vector>
+#include <map>
 #include <string>
 
-class Bus;
+class NesBus;
+class TestBus;
 
 class nes6502
 {
@@ -17,7 +19,7 @@ public:
 	nes6502();
 	~nes6502();
 
-	void connectBus(Bus* bus);
+	void connectBus(TestBus* bus);
 
 	// status flags that change how certain functions act
 	enum FLAGS6502 {
@@ -55,7 +57,7 @@ public:
 
 // switch to private later
 public:
-	Bus* bus = nullptr;
+	TestBus* bus = nullptr;
 
 	// for the cpu to use when executing instructions
 	uint8_t read(uint16_t address);
@@ -112,5 +114,7 @@ public:
 	};
 
 	std::vector<Instruction> lookup;  // lookup table for the instructions given an opcode
+
+	std::map<int, std::string> disassemble(uint16_t startAddr, uint16_t endAddr);
 };
 

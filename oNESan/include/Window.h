@@ -9,6 +9,7 @@
 #include <imgui/imgui_stdlib.h>
 
 #include <iostream>
+#include <map>
 #include <algorithm>
 
 #include "InputManager.h"
@@ -51,15 +52,24 @@ private:
 	const int MAX_CLOCKS = 100000;
 
 	std::string testRomPath = "src/tests/6502_functional_test.bin";
-	bool followPC = false;
+
+	// Memory Viewer
+	bool memoryFollowPC = false;
 	int testClocks = 0;
 	uint16_t targetPC = 0x0000;
 	uint16_t searchAddress = 0x0000;
 	float targetMemoryYScroll = 0.0f;
 
+	// Disassembly Viewer
+	bool disassemblerFollowPC = true;
+	uint16_t currentAddr = 0x0000;
+	std::map<int, std::string> disassemblyLines;
+	int disassemblyDisplaySize = 20;
+
 	void renderControlWindow(Emulator& emulator);
 	void renderCPUWindow(Emulator& emulator);
 	void renderMemoryWindow(Emulator& emulator);
+	void renderDisassemblyWindow(Emulator& emulator);
 
 	static void keyEventCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 	void processInput();

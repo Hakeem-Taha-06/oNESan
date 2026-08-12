@@ -10,8 +10,8 @@ Emulator::~Emulator() {
 
 void Emulator::init(){
 	// hardcoded reset vector
-	bus.write(0xFFFC, 0x00);
-	bus.write(0xFFFD, 0x04);
+	bus.cpuWrite(0xFFFC, 0x00);
+	bus.cpuWrite(0xFFFD, 0x04);
 
 	bus.cpu.reset();
 }
@@ -30,7 +30,7 @@ void Emulator::load(const std::string& path) {
 		
 	for (int i = 0; i < size; ++i)
 		// should start from 0x0000 but the klaus test rom always assembles with a 10 byte offset for some reason, this is temporary anyways and will be replaced 
-		bus.write(0x000a + (uint16_t)i, buffer[i]); 
+		bus.cpuWrite(0x000a + (uint16_t)i, buffer[i]); 
 
 	init();
 }

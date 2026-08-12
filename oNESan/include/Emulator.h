@@ -18,5 +18,5 @@ public:
 	void clock();
 	void load(const std::string& path);
 
-	Bus bus;
+	TestBus bus;
 };

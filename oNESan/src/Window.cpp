@@ -104,6 +104,8 @@ void Window::render(Emulator& emulator) {
 	renderMemoryWindow(emulator);
 	ImGui::PopStyleVar(1);
 
+	renderDisassemblyWindow(emulator);
+
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
@@ -186,9 +188,9 @@ void Window::renderMemoryWindow(Emulator& emulator) {
 	int numRows = (int)ramSize / numCols;
 	ImGuiTableFlags flags = ImGuiTableFlags_BordersOuter | ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg;
 
-	ImGui::Checkbox("Follow PC", &followPC);
+	ImGui::Checkbox("Follow PC", &memoryFollowPC);
 
-	if (followPC) {
+	if (memoryFollowPC) {
 		// set target y scroll based on pc row
 		int pcRow = emulator.bus.cpu.pc / numCols;
 		ImGuiStyle& style = ImGui::GetStyle();
@@ -203,7 +205,7 @@ void Window::renderMemoryWindow(Emulator& emulator) {
 	ImGui::SameLine();
 	if (ImGui::Button("GOTO") && !wantSearch) {
 		wantSearch = true;
-		followPC = false;
+		memoryFollowPC = false;
 		int searchRow = searchAddress / numCols;
 		ImGuiStyle& style = ImGui::GetStyle();
 		float rowHeight = ImGui::GetTextLineHeight() + style.CellPadding.y * 2.0f + style.FramePadding.y * 2;
@@ -224,7 +226,7 @@ void Window::renderMemoryWindow(Emulator& emulator) {
 			wantSearch = false;
 		}
 
-		if (followPC) {
+		if (memoryFollowPC) {
 			ImGui::SetScrollY(targetMemoryYScroll);
 		}
 
@@ -276,6 +278,41 @@ void Window::renderMemoryWindow(Emulator& emulator) {
 
 		ImGui::EndTable();
 	}
+	ImGui::End();
+}
+
+
+void Window::renderDisassemblyWindow(Emulator& emulator) {
+	ImGui::Begin("Disassembly");
+
+	if (disassemblerFollowPC) currentAddr = emulator.bus.cpu.pc;
+
+	uint16_t startAddr = currentAddr;
+	uint16_t endAddr = currentAddr + disassemblyDisplaySize;
+
+	disassemblyLines = emulator.bus.cpu.disassemble(startAddr, endAddr);
+
+	if (ImGui::BeginTable("##disassembly", 1, ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit)) {
+		
+		//ImGui::TableSetupColumn("##Lines", ImGuiTableColumnFlags_WidthFixed, 300.0f);
+		
+		int i = 0;
+		for (auto& [addr, instr] : disassemblyLines) {
+			ImGui::TableNextRow();
+
+			ImGui::TableSetColumnIndex(0);
+			if (addr == emulator.bus.cpu.pc) {
+				ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "%s", instr.c_str());
+			}
+			else {
+				ImGui::Text("%s", instr.c_str());
+			}
+			++i;
+		}
+
+		ImGui::EndTable();
+	}
+
 	ImGui::End();
 }
 

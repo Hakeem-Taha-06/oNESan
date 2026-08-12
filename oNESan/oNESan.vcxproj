@@ -104,14 +104,18 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="include\Cartridge.h" />
     <ClInclude Include="include\Application.h" />
     <ClInclude Include="include\Bus.h" />
     <ClInclude Include="include\Emulator.h" />
     <ClInclude Include="include\InputManager.h" />
     <ClInclude Include="include\Window.h" />
     <ClInclude Include="include\nes6502.h" />
+    <ClInclude Include="include\nes2C02.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\nes2C02.cpp" />
+    <ClCompile Include="src\Cartridge.cpp" />
     <ClCompile Include="dependencies\src\glad.c" />
     <ClCompile Include="dependencies\src\imgui.cpp" />
     <ClCompile Include="dependencies\src\imgui_demo.cpp" />
