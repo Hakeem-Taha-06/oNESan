@@ -294,8 +294,6 @@ void Window::renderDisassemblyWindow(Emulator& emulator) {
 
 	if (ImGui::BeginTable("##disassembly", 1, ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit)) {
 		
-		//ImGui::TableSetupColumn("##Lines", ImGuiTableColumnFlags_WidthFixed, 300.0f);
-		
 		int i = 0;
 		for (auto& [addr, instr] : disassemblyLines) {
 			ImGui::TableNextRow();

@@ -63,7 +63,7 @@ private:
 	// Disassembly Viewer
 	bool disassemblerFollowPC = true;
 	uint16_t currentAddr = 0x0000;
-	std::map<int, std::string> disassemblyLines;
+	std::map<uint16_t, std::string> disassemblyLines;
 	int disassemblyDisplaySize = 20;
 
 	void renderControlWindow(Emulator& emulator);

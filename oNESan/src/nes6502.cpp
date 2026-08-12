@@ -852,8 +852,8 @@ uint8_t nes6502::XXX() {
 }
 
 
-std::map<int, std::string> nes6502::disassemble(uint16_t startAddr, uint16_t endAddr) {
-	std::map<int, std::string> lines;
+std::map<uint16_t, std::string> nes6502::disassemble(uint16_t startAddr, uint16_t endAddr) {
+	std::map<uint16_t, std::string> lines;
 	
 	uint16_t currentAddr = startAddr;
 	std::string instr = "";
@@ -864,6 +864,7 @@ std::map<int, std::string> nes6502::disassemble(uint16_t startAddr, uint16_t end
 
 	while (currentAddr <= endAddr) {
 		uint16_t lineAddr = currentAddr;
+
 		instr = "#";
 		instr += hex(lineAddr >> 12 & 0x000F);
 		instr += hex(lineAddr >> 8 & 0x000F);
@@ -871,65 +872,127 @@ std::map<int, std::string> nes6502::disassemble(uint16_t startAddr, uint16_t end
 		instr += hex(lineAddr >> 0 & 0x000F);
 	
 		opcode = bus->cpuRead(currentAddr);
+		currentAddr++;
 		instr += " " + lookup[opcode].name;
 		if (lookup[opcode].addrmode == &nes6502::IMP) {
 			instr += " {IMP}";
 		}
 		else if (lookup[opcode].addrmode == &nes6502::IMM) {
-			currentAddr++;
 			instr += " #$";
 			uint8_t operand = bus->cpuRead(currentAddr);
+			currentAddr++;
 			instr += hex(operand>>4 & 0x000F);
 			instr += hex(operand>>0 & 0x000F);
 			instr += " {IMM}";
 		}
 		else if (lookup[opcode].addrmode == &nes6502::ZP0) {
+			uint8_t operand = bus->cpuRead(currentAddr);
 			currentAddr++;
+			instr += " $";
+			instr += hex(operand >> 4 & 0x000F);
+			instr += hex(operand >> 0 & 0x000F);
 			instr += " {ZP0}";
 		}
 		else if (lookup[opcode].addrmode == &nes6502::ZPX) {
+			uint8_t operand = bus->cpuRead(currentAddr);
 			currentAddr++;
-			instr += " {ZPX}";
+			instr += " $";
+			instr += hex(operand >> 4 & 0x000F);
+			instr += hex(operand >> 0 & 0x000F);
+			instr += ", X {ZPX}";
 		}
 		else if (lookup[opcode].addrmode == &nes6502::ZPY) {
+			uint8_t operand = bus->cpuRead(currentAddr);
 			currentAddr++;
-			instr += " {ZPY}";
+			instr += " $";
+			instr += hex(operand >> 4 & 0x000F);
+			instr += hex(operand >> 0 & 0x000F);
+			instr += ", Y {ZPY}";
 		}
 		else if (lookup[opcode].addrmode == &nes6502::IND) {
+			uint16_t lo = bus->cpuRead(currentAddr);
 			currentAddr++;
+			uint16_t hi = bus->cpuRead(currentAddr);
 			currentAddr++;
-			instr += " {IND}";
+			uint16_t addr = (hi << 8) | lo;
+			instr += " ($";
+			instr += hex(addr >> 12 & 0x000F);
+			instr += hex(addr >> 8 & 0x000F);
+			instr += hex(addr >> 4 & 0x000F);
+			instr += hex(addr >> 0 & 0x000F);
+			instr += ") {IND}";
 		}
 		else if (lookup[opcode].addrmode == &nes6502::IZX) {
+			uint8_t operand = bus->cpuRead(currentAddr);
 			currentAddr++;
-			instr += " {IZX}";
+			instr += " ($";
+			instr += hex(operand >> 4 & 0x000F);
+			instr += hex(operand >> 0 & 0x000F);
+			instr += ", X) {IZX}";
 		}
 		else if (lookup[opcode].addrmode == &nes6502::IZY) {
+			uint8_t operand = bus->cpuRead(currentAddr);
 			currentAddr++;
-			instr += " {IZY}";
+			instr += " ($";
+			instr += hex(operand >> 4 & 0x000F);
+			instr += hex(operand >> 0 & 0x000F);
+			instr += "), Y {IZY}";
 		}
 		else if (lookup[opcode].addrmode == &nes6502::ABS) {
+			uint16_t lo = bus->cpuRead(currentAddr);
 			currentAddr++;
+			uint16_t hi = bus->cpuRead(currentAddr);
 			currentAddr++;
+			uint16_t addr = (hi << 8) | lo;
+			instr += " $";
+			instr += hex(addr >> 12 & 0x000F);
+			instr += hex(addr >> 8 & 0x000F);
+			instr += hex(addr >> 4 & 0x000F);
+			instr += hex(addr >> 0 & 0x000F);
 			instr += " {ABS}";
 		}
 		else if (lookup[opcode].addrmode == &nes6502::ABX) {
+			uint16_t lo = bus->cpuRead(currentAddr);
 			currentAddr++;
+			uint16_t hi = bus->cpuRead(currentAddr);
 			currentAddr++;
-			instr += " {ABX}";
+			uint16_t addr = (hi << 8) | lo;
+			instr += " $";
+			instr += hex(addr >> 12 & 0x000F);
+			instr += hex(addr >> 8 & 0x000F);
+			instr += hex(addr >> 4 & 0x000F);
+			instr += hex(addr >> 0 & 0x000F);
+			instr += ", X {ABX}";
 		}
 		else if (lookup[opcode].addrmode == &nes6502::ABY) {
+			uint16_t lo = bus->cpuRead(currentAddr);
 			currentAddr++;
+			uint16_t hi = bus->cpuRead(currentAddr);
 			currentAddr++;
-			instr += " {ABY}";
+			uint16_t addr = (hi << 8) | lo;
+			instr += " $";
+			instr += hex(addr >> 12 & 0x000F);
+			instr += hex(addr >> 8 & 0x000F);
+			instr += hex(addr >> 4 & 0x000F);
+			instr += hex(addr >> 0 & 0x000F);
+			instr += ", Y {ABY}";
 		}
 		else if (lookup[opcode].addrmode == &nes6502::REL) {
+			uint8_t operand = bus->cpuRead(currentAddr);
 			currentAddr++;
-			instr += " {REL}";
+			instr += " $";
+			instr += hex(operand >> 4 & 0x000F);
+			instr += hex(operand >> 0 & 0x000F);
+			uint16_t addr = currentAddr + (int8_t)operand; // cast to int8_t for negative offsets
+			instr += " [$";
+			instr += hex(addr >> 12 & 0x000F);
+			instr += hex(addr >> 8 & 0x000F);
+			instr += hex(addr >> 4 & 0x000F);
+			instr += hex(addr >> 0 & 0x000F);
+			instr += "] {REL}";
 		}
 
 		lines[lineAddr] = instr;
-		currentAddr++;
 	}
 	return lines;
 }

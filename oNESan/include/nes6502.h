@@ -115,6 +115,6 @@ public:
 
 	std::vector<Instruction> lookup;  // lookup table for the instructions given an opcode
 
-	std::map<int, std::string> disassemble(uint16_t startAddr, uint16_t endAddr);
+	std::map<uint16_t, std::string> disassemble(uint16_t startAddr, uint16_t endAddr);
 };
 
