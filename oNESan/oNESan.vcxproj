@@ -112,8 +112,11 @@
     <ClInclude Include="include\Window.h" />
     <ClInclude Include="include\nes6502.h" />
     <ClInclude Include="include\nes2C02.h" />
+    <ClInclude Include="include\Mapper.h" />
+    <ClInclude Include="include\Mapper000.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Mapper000.cpp" />
     <ClCompile Include="src\nes2C02.cpp" />
     <ClCompile Include="src\Cartridge.cpp" />
     <ClCompile Include="dependencies\src\glad.c" />

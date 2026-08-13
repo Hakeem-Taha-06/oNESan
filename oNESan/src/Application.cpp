@@ -9,6 +9,8 @@ Application::~Application() {
 }
 
 void Application::run() {
+	emulator.loadCartridge("src/ROMs/nestest.nes");
+	emulator.reset();
 	while (!window.shouldExit()) {
 		window.startFrame();
 		window.render(emulator);

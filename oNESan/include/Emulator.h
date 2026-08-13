@@ -5,18 +5,24 @@
 #include <cstdint>
 #include <iostream>
 #include <stdexcept>
+#include <memory>
 
 #include "Bus.h"
 #include "nes6502.h"
+#include "nes2C02.h"
+#include "Cartridge.h" 
 
 class Emulator {
 public:
 	Emulator();
 	~Emulator();
 
-	void init();
+	void reset();
 	void clock();
-	void load(const std::string& path);
+	void load(std::string path);
 
-	TestBus bus;
+	void loadCartridge(std::string path);
+
+	NesBus bus;
+	std::shared_ptr<Cartridge> cart;
 };

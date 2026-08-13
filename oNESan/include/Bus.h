@@ -8,35 +8,53 @@
 #include "nes2C02.h"
 #include "Cartridge.h"
 
-class TestBus
+class Bus
+{
+public:
+	virtual ~Bus() = default;
+
+	virtual uint8_t cpuRead(uint16_t address) = 0;
+	virtual void cpuWrite(uint16_t address, uint8_t data) = 0;
+
+	virtual void clock() = 0;
+	virtual void reset() = 0;
+};
+
+class TestBus : public Bus
 {
 public:
 	TestBus();
 	~TestBus();
 
-	uint8_t cpuRead(uint16_t address);
-	void cpuWrite(uint16_t address, uint8_t data);
+	uint8_t cpuRead(uint16_t address) override;
+	void cpuWrite(uint16_t address, uint8_t data) override;
+
+	void clock() override;
+	void reset() override;
 
 	// temporary ram
 	std::array<uint8_t, 64 * 1024> ram;
 	nes6502 cpu;
 };
 
-class NesBus 
+class NesBus : public Bus
 {
 public:
 	NesBus();
 	~NesBus();
 
-	uint8_t cpuRead(uint16_t addr);
-	void cpuWrite(uint16_t addr, uint8_t data);
+	uint8_t cpuRead(uint16_t addr) override;
+	void cpuWrite(uint16_t addr, uint8_t data) override;
 
 	void insertCartridge(const std::shared_ptr<Cartridge>& cartridge);
+
+	void clock() override;
+	void reset() override;
 
 	nes6502 cpu;
 	nes2C02 ppu;
 	std::shared_ptr<Cartridge> cart;
-
 	std::array<uint8_t, 2 * 1024> cpuRam;
 
+	int numClocks = 0;
 };

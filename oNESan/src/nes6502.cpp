@@ -30,7 +30,7 @@ nes6502::~nes6502() {
 
 }
 
-void nes6502::connectBus(TestBus* b) {
+void nes6502::connectBus(Bus* b) {
 	bus = b;
 }
 
@@ -72,6 +72,7 @@ void nes6502::reset() {
 	fetched = 0x00;
 
 	cycles = 8;
+	totalCycles = 0;
 }
 
 void nes6502::irq() {
@@ -150,6 +151,10 @@ void nes6502::setFlag(FLAGS6502 f, bool v) {
 		stat |= f;
 	else
 		stat &= ~f;
+}
+
+inline bool nes6502::complete() const {
+	return cycles == 0;
 }
 
 // ---------------------------------------------------------------------------------------------------------
@@ -871,13 +876,13 @@ std::map<uint16_t, std::string> nes6502::disassemble(uint16_t startAddr, uint16_
 		instr += hex(lineAddr >> 4 & 0x000F);
 		instr += hex(lineAddr >> 0 & 0x000F);
 	
-		opcode = bus->cpuRead(currentAddr);
+		uint8_t readOpcode = bus->cpuRead(currentAddr);
 		currentAddr++;
-		instr += " " + lookup[opcode].name;
-		if (lookup[opcode].addrmode == &nes6502::IMP) {
+		instr += " " + lookup[readOpcode].name;
+		if (lookup[readOpcode].addrmode == &nes6502::IMP) {
 			instr += " {IMP}";
 		}
-		else if (lookup[opcode].addrmode == &nes6502::IMM) {
+		else if (lookup[readOpcode].addrmode == &nes6502::IMM) {
 			instr += " #$";
 			uint8_t operand = bus->cpuRead(currentAddr);
 			currentAddr++;
@@ -885,7 +890,7 @@ std::map<uint16_t, std::string> nes6502::disassemble(uint16_t startAddr, uint16_
 			instr += hex(operand>>0 & 0x000F);
 			instr += " {IMM}";
 		}
-		else if (lookup[opcode].addrmode == &nes6502::ZP0) {
+		else if (lookup[readOpcode].addrmode == &nes6502::ZP0) {
 			uint8_t operand = bus->cpuRead(currentAddr);
 			currentAddr++;
 			instr += " $";
@@ -893,7 +898,7 @@ std::map<uint16_t, std::string> nes6502::disassemble(uint16_t startAddr, uint16_
 			instr += hex(operand >> 0 & 0x000F);
 			instr += " {ZP0}";
 		}
-		else if (lookup[opcode].addrmode == &nes6502::ZPX) {
+		else if (lookup[readOpcode].addrmode == &nes6502::ZPX) {
 			uint8_t operand = bus->cpuRead(currentAddr);
 			currentAddr++;
 			instr += " $";
@@ -901,7 +906,7 @@ std::map<uint16_t, std::string> nes6502::disassemble(uint16_t startAddr, uint16_
 			instr += hex(operand >> 0 & 0x000F);
 			instr += ", X {ZPX}";
 		}
-		else if (lookup[opcode].addrmode == &nes6502::ZPY) {
+		else if (lookup[readOpcode].addrmode == &nes6502::ZPY) {
 			uint8_t operand = bus->cpuRead(currentAddr);
 			currentAddr++;
 			instr += " $";
@@ -909,7 +914,7 @@ std::map<uint16_t, std::string> nes6502::disassemble(uint16_t startAddr, uint16_
 			instr += hex(operand >> 0 & 0x000F);
 			instr += ", Y {ZPY}";
 		}
-		else if (lookup[opcode].addrmode == &nes6502::IND) {
+		else if (lookup[readOpcode].addrmode == &nes6502::IND) {
 			uint16_t lo = bus->cpuRead(currentAddr);
 			currentAddr++;
 			uint16_t hi = bus->cpuRead(currentAddr);
@@ -922,7 +927,7 @@ std::map<uint16_t, std::string> nes6502::disassemble(uint16_t startAddr, uint16_
 			instr += hex(addr >> 0 & 0x000F);
 			instr += ") {IND}";
 		}
-		else if (lookup[opcode].addrmode == &nes6502::IZX) {
+		else if (lookup[readOpcode].addrmode == &nes6502::IZX) {
 			uint8_t operand = bus->cpuRead(currentAddr);
 			currentAddr++;
 			instr += " ($";
@@ -930,7 +935,7 @@ std::map<uint16_t, std::string> nes6502::disassemble(uint16_t startAddr, uint16_
 			instr += hex(operand >> 0 & 0x000F);
 			instr += ", X) {IZX}";
 		}
-		else if (lookup[opcode].addrmode == &nes6502::IZY) {
+		else if (lookup[readOpcode].addrmode == &nes6502::IZY) {
 			uint8_t operand = bus->cpuRead(currentAddr);
 			currentAddr++;
 			instr += " ($";
@@ -938,7 +943,7 @@ std::map<uint16_t, std::string> nes6502::disassemble(uint16_t startAddr, uint16_
 			instr += hex(operand >> 0 & 0x000F);
 			instr += "), Y {IZY}";
 		}
-		else if (lookup[opcode].addrmode == &nes6502::ABS) {
+		else if (lookup[readOpcode].addrmode == &nes6502::ABS) {
 			uint16_t lo = bus->cpuRead(currentAddr);
 			currentAddr++;
 			uint16_t hi = bus->cpuRead(currentAddr);
@@ -951,7 +956,7 @@ std::map<uint16_t, std::string> nes6502::disassemble(uint16_t startAddr, uint16_
 			instr += hex(addr >> 0 & 0x000F);
 			instr += " {ABS}";
 		}
-		else if (lookup[opcode].addrmode == &nes6502::ABX) {
+		else if (lookup[readOpcode].addrmode == &nes6502::ABX) {
 			uint16_t lo = bus->cpuRead(currentAddr);
 			currentAddr++;
 			uint16_t hi = bus->cpuRead(currentAddr);
@@ -964,7 +969,7 @@ std::map<uint16_t, std::string> nes6502::disassemble(uint16_t startAddr, uint16_
 			instr += hex(addr >> 0 & 0x000F);
 			instr += ", X {ABX}";
 		}
-		else if (lookup[opcode].addrmode == &nes6502::ABY) {
+		else if (lookup[readOpcode].addrmode == &nes6502::ABY) {
 			uint16_t lo = bus->cpuRead(currentAddr);
 			currentAddr++;
 			uint16_t hi = bus->cpuRead(currentAddr);
@@ -977,7 +982,7 @@ std::map<uint16_t, std::string> nes6502::disassemble(uint16_t startAddr, uint16_
 			instr += hex(addr >> 0 & 0x000F);
 			instr += ", Y {ABY}";
 		}
-		else if (lookup[opcode].addrmode == &nes6502::REL) {
+		else if (lookup[readOpcode].addrmode == &nes6502::REL) {
 			uint8_t operand = bus->cpuRead(currentAddr);
 			currentAddr++;
 			instr += " $";

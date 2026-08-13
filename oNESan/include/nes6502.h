@@ -10,8 +10,7 @@
 #include <map>
 #include <string>
 
-class NesBus;
-class TestBus;
+class Bus;
 
 class nes6502
 {
@@ -19,7 +18,7 @@ public:
 	nes6502();
 	~nes6502();
 
-	void connectBus(TestBus* bus);
+	void connectBus(Bus* bus);
 
 	// status flags that change how certain functions act
 	enum FLAGS6502 {
@@ -51,13 +50,13 @@ public:
 	// fetches a byte of data based on the addressing mode 
 	uint8_t fetch();
 	
-	bool complete();
+	inline bool complete() const;
 
 	uint8_t getFlag(FLAGS6502 f) const;
 
 // switch to private later
 public:
-	TestBus* bus = nullptr;
+	Bus* bus = nullptr;
 
 	// for the cpu to use when executing instructions
 	uint8_t read(uint16_t address);

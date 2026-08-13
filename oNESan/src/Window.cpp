@@ -6,10 +6,12 @@ Window::Window(int width, int height): WIDTH(width), HEIGHT(height), inputManage
 }
 
 Window::~Window() {
+#ifdef DEBUG
 	// ImGui termination (all debug ui stuff can be moved to a separate ui class)
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
+#endif // DEBUG
 
 	glfwTerminate();
 }
@@ -51,6 +53,7 @@ void Window::init() {
 
 	glfwSetKeyCallback(w, Window::keyEventCallback);
 	//setGLFWEventCallbacks(w);
+#ifdef DEBUG
 
 	// Setup Dear ImGui context (all debug ui stuff can be moved to a separate ui class)
 	IMGUI_CHECKVERSION();
@@ -80,6 +83,7 @@ void Window::init() {
 	// Setup Platform/Renderer backends
 	ImGui_ImplGlfw_InitForOpenGL(w, true);                    // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
 	ImGui_ImplOpenGL3_Init("#version 330");
+#endif // DEBUG
 
 	m_window = w;
 
@@ -93,6 +97,7 @@ void Window::render(Emulator& emulator) {
 	glClearColor(0.2f, 0.2f, 0.5f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
+#ifdef DEBUG
 	// IMGUI (all debug ui stuff can be moved to a separate ui class)
 	// Create a dockspace that covers the entire viewport
 	ImGui::DockSpaceOverViewport(ImGui::GetMainViewport()->ID, ImGui::GetMainViewport());
@@ -116,6 +121,7 @@ void Window::render(Emulator& emulator) {
 		ImGui::RenderPlatformWindowsDefault();
 		glfwMakeContextCurrent(backup_current_context);
 	}
+#endif // DEBUG
 }
 
 void Window::renderControlWindow(Emulator& emulator) {
@@ -183,7 +189,7 @@ void Window::renderMemoryWindow(Emulator& emulator) {
 	ImGui::Begin("Memory");
 
 	// setup
-	size_t ramSize = emulator.bus.ram.size();
+	size_t ramSize = 64*1024;
 	int numCols = 16;
 	int numRows = (int)ramSize / numCols;
 	ImGuiTableFlags flags = ImGuiTableFlags_BordersOuter | ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg;
@@ -194,7 +200,7 @@ void Window::renderMemoryWindow(Emulator& emulator) {
 		// set target y scroll based on pc row
 		int pcRow = emulator.bus.cpu.pc / numCols;
 		ImGuiStyle& style = ImGui::GetStyle();
-		float rowHeight = ImGui::GetTextLineHeight() + style.CellPadding.y * 2.0f + style.FramePadding.y * 2;
+		float rowHeight = ImGui::GetTextLineHeight() + style.CellPadding.y * 2.0f;
 		targetMemoryYScroll = pcRow*rowHeight;
 	}
 
@@ -208,7 +214,7 @@ void Window::renderMemoryWindow(Emulator& emulator) {
 		memoryFollowPC = false;
 		int searchRow = searchAddress / numCols;
 		ImGuiStyle& style = ImGui::GetStyle();
-		float rowHeight = ImGui::GetTextLineHeight() + style.CellPadding.y * 2.0f + style.FramePadding.y * 2;
+		float rowHeight = ImGui::GetTextLineHeight() + style.CellPadding.y * 2.0f;
 		targetMemoryYScroll = searchRow * rowHeight;
 
 	}
@@ -247,28 +253,22 @@ void Window::renderMemoryWindow(Emulator& emulator) {
 					ImGui::PushID((int)byteIdx);
 					ImGui::PushItemWidth(-FLT_MIN);
 
-					uint8_t& data = emulator.bus.ram[byteIdx];
+					uint8_t data = emulator.bus.cpuRead(byteIdx);
 
 					bool isPcIdx = emulator.bus.cpu.pc == byteIdx;
 					bool isStkIdx = emulator.bus.cpu.stkp + 0x100 == byteIdx;
 					
-					// color the box where the program counter is
+					ImVec4 textColor{1.0f, 1.0f, 1.0f, 1.0f};
+
 					if (isPcIdx) 
-						ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.6f, 0.0f, 0.3f, 1.0f));
+						textColor = ImVec4(1.0f, 1.0f, 0.0f, 1.0f);
 
 					if(isStkIdx)
-						ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.3f, 0.0f, 0.6f, 1.0f));
+						textColor = ImVec4(0.0f, 1.0f, 1.0f, 1.0f);
 
 					if (byteIdx < ramSize) {
-						ImGui::InputScalar("##data", ImGuiDataType_U8, &data, nullptr, nullptr, "%02X", ImGuiInputTextFlags_CharsHexadecimal);
+						ImGui::TextColored(textColor, "%02X", data);
 					}
-
-					// only pop the style color if we had pushed it above
-					if (isPcIdx) 
-						ImGui::PopStyleColor(1);
-
-					if (isStkIdx)
-						ImGui::PopStyleColor(1);
 
 					ImGui::PopItemWidth();
 					ImGui::PopID();
@@ -285,7 +285,20 @@ void Window::renderMemoryWindow(Emulator& emulator) {
 void Window::renderDisassemblyWindow(Emulator& emulator) {
 	ImGui::Begin("Disassembly");
 
+	ImGui::Checkbox("Follow PC", &disassemblerFollowPC);
+	ImGui::SameLine();
+	if (ImGui::Button("<")) {
+		currentAddr--;
+		disassemblerFollowPC = false;
+	}
+	ImGui::SameLine();
+	if (ImGui::Button(">")) {
+		currentAddr++;
+		disassemblerFollowPC = false;
+	}
+
 	if (disassemblerFollowPC) currentAddr = emulator.bus.cpu.pc;
+
 
 	uint16_t startAddr = currentAddr;
 	uint16_t endAddr = currentAddr + disassemblyDisplaySize;
@@ -294,6 +307,15 @@ void Window::renderDisassemblyWindow(Emulator& emulator) {
 
 	if (ImGui::BeginTable("##disassembly", 1, ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit)) {
 		
+		//ImGuiListClipper clipper;
+		//clipper.Begin(disassemblyLines.size());
+		//
+		//while (clipper.Step()) {
+		//	for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; ++i) {
+		//
+		//	}
+		//}
+
 		int i = 0;
 		for (auto& [addr, instr] : disassemblyLines) {
 			ImGui::TableNextRow();
@@ -317,10 +339,12 @@ void Window::renderDisassemblyWindow(Emulator& emulator) {
 void Window::startFrame() {
 	glfwPollEvents();
 
+#ifdef DEBUG
 	// Start the Dear ImGui frame (all debug ui stuff can be moved to a separate ui class)
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
+#endif // DEBUG
 }
 
 void Window::endFrame() {

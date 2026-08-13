@@ -49,7 +49,7 @@ private:
 
 	int WIDTH = 800, HEIGHT = 600;
 
-	const int MAX_CLOCKS = 100000;
+	const int MAX_CLOCKS = 100'000'000;
 
 	std::string testRomPath = "src/tests/6502_functional_test.bin";
 
