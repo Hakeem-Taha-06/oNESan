@@ -50,7 +50,7 @@ public:
 	// fetches a byte of data based on the addressing mode 
 	uint8_t fetch();
 	
-	inline bool complete() const;
+	inline bool complete() const { return cycles == 0; }
 
 	uint8_t getFlag(FLAGS6502 f) const;
 

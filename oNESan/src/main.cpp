@@ -5,7 +5,7 @@
 
 int main() {
 
-	Application a{1280, 800};
+	Application a{1600, 800};
 
 	a.run();
 

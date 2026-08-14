@@ -70,6 +70,7 @@ private:
 	void renderCPUWindow(Emulator& emulator);
 	void renderMemoryWindow(Emulator& emulator);
 	void renderDisassemblyWindow(Emulator& emulator);
+	void renderCHRROMWindow(Emulator& emulator);
 
 	static void keyEventCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 	void processInput();

@@ -27,7 +27,7 @@ void Window::init() {
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	float main_scale = ImGui_ImplGlfw_GetContentScaleForMonitor(glfwGetPrimaryMonitor()); // Valid on GLFW 3.3+ only
-	GLFWwindow* w = glfwCreateWindow(WIDTH, HEIGHT, "Hello, Window!", nullptr, nullptr);
+	GLFWwindow* w = glfwCreateWindow(WIDTH, HEIGHT, "oNESan", nullptr, nullptr);
 	if (w == nullptr) {
 		std::cout << "Failed to create window";
 
@@ -110,6 +110,7 @@ void Window::render(Emulator& emulator) {
 	ImGui::PopStyleVar(1);
 
 	renderDisassemblyWindow(emulator);
+	renderCHRROMWindow(emulator);
 
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -249,7 +250,7 @@ void Window::renderMemoryWindow(Emulator& emulator) {
 				for (int col = 0; col < numCols; ++col) {
 					ImGui::TableSetColumnIndex(col + 1);
 
-					size_t byteIdx = row * numCols + col;
+					uint16_t byteIdx = row * numCols + col;
 					ImGui::PushID((int)byteIdx);
 					ImGui::PushItemWidth(-FLT_MIN);
 
@@ -297,6 +298,10 @@ void Window::renderDisassemblyWindow(Emulator& emulator) {
 		disassemblerFollowPC = false;
 	}
 
+	if (ImGui::InputScalar("##disassembleraddr", ImGuiDataType_U16, &currentAddr, 0, 0, "%04X", ImGuiInputTextFlags_CharsHexadecimal)) {
+		disassemblerFollowPC = false;
+	}
+
 	if (disassemblerFollowPC) currentAddr = emulator.bus.cpu.pc;
 
 
@@ -334,6 +339,29 @@ void Window::renderDisassemblyWindow(Emulator& emulator) {
 	}
 
 	ImGui::End();
+}
+
+void Window::renderCHRROMWindow(Emulator& emulator) {
+	const uint8_t *data = emulator.cart->getCHRROM().data();
+
+	unsigned int texture;
+	glGenTextures(1, &texture);
+	glBindTexture(GL_TEXTURE_2D, texture);
+	
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, 256, 32, 0, GL_RED, GL_UNSIGNED_BYTE, data); 
+
+	ImGui::Begin("CHRROM");
+
+	ImTextureID imTexture = (ImTextureID)(intptr_t)texture;
+	ImGui::GetWindowDrawList()->AddCallback(ImGui::GetPlatformIO().DrawCallback_SetSamplerNearest, nullptr);
+	ImGui::Image(imTexture, ImVec2(256*4, 32*4));
+	ImGui::GetWindowDrawList()->AddCallback(ImGui::GetPlatformIO().DrawCallback_SetSamplerLinear, nullptr);
+
+	ImGui::End();
+	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void Window::startFrame() {

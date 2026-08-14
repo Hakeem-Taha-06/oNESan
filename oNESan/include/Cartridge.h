@@ -23,6 +23,12 @@ public:
 	uint8_t ppuRead(uint16_t addr);
 	void ppuWrite(uint16_t addr, uint8_t data);
 
+	inline size_t getPRGSize() const { return PRGROM.size(); }
+	inline size_t getCHRSize() const { return CHRROM.size(); }
+
+	inline const std::vector<uint8_t>& getPRGROM() const { return PRGROM; }
+	inline const std::vector<uint8_t>& getCHRROM() const { return CHRROM; }
+
 private:
 	std::vector<uint8_t> PRGROM;
 	std::vector<uint8_t> CHRROM;
