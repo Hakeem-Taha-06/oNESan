@@ -5,9 +5,11 @@
 
 int main() {
 
-	Application a{1600, 800};
+	Application* a = new Application{1600, 800};
 
-	a.run();
+	a->run();
+
+	delete a;
 
 	return 0;
 }

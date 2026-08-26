@@ -21,26 +21,30 @@
     <ClInclude Include="include\Bus.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\Cartridge.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\Emulator.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\InputManager.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\Mapper.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Mapper000.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\Window.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\nes6502.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Cartridge.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\nes2C02.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="include\Mapper.h" />
-    <ClInclude Include="include\Mapper000.h" />
+    <ClInclude Include="include\nes6502.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dependencies\src\glad.c">
@@ -70,13 +74,22 @@
     <ClCompile Include="dependencies\src\imgui_widgets.cpp">
       <Filter>dependencies\src</Filter>
     </ClCompile>
+    <ClCompile Include="dependencies\src\tinyfiledialogs.c">
+      <Filter>dependencies\src</Filter>
+    </ClCompile>
     <ClCompile Include="src\Application.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\Bus.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\Cartridge.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="src\Emulator.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Mapper000.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\Window.cpp">
@@ -85,15 +98,11 @@
     <ClCompile Include="src\main.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\nes6502.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Cartridge.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="src\nes2C02.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\Mapper000.cpp" />
+    <ClCompile Include="src\nes6502.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

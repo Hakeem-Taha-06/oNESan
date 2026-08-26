@@ -128,8 +128,23 @@ void Window::render(Emulator& emulator) {
 void Window::renderControlWindow(Emulator& emulator) {
 	ImGui::Begin("Debug Window");
 
-	if (ImGui::InputText("##RomPath", &testRomPath, ImGuiInputTextFlags_EnterReturnsTrue) 
-		||ImGui::Button("Load Test ROM")) {
+
+	ImGui::InputText("##RomPath", &testRomPath);
+	ImGui::SameLine();
+	if (ImGui::Button("Browse")) {
+		const char* filterPatters[1] = { "*.nes" };
+		const char* path = tinyfd_openFileDialog(
+			"Choose .nes ROM file",
+			"",
+			1,
+			filterPatters,
+			".nes",
+			0
+		);
+		if (path)
+			testRomPath = path;
+	}
+	if (ImGui::Button("Load Test ROM")) {
 		try {
 			emulator.load(testRomPath);
 		}
@@ -342,22 +357,23 @@ void Window::renderDisassemblyWindow(Emulator& emulator) {
 }
 
 void Window::renderCHRROMWindow(Emulator& emulator) {
-	const uint8_t *data = emulator.cart->getCHRROM().data();
+	const float *data = emulator.bus.ppu.getPatternTable(0, 1);
 
-	unsigned int texture;
-	glGenTextures(1, &texture);
-	glBindTexture(GL_TEXTURE_2D, texture);
+	if(CHRROMScreenTexture == 0)
+		glGenTextures(1, &CHRROMScreenTexture);
+		
+	glBindTexture(GL_TEXTURE_2D, CHRROMScreenTexture);
 	
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, 256, 32, 0, GL_RED, GL_UNSIGNED_BYTE, data); 
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 128, 128, 0, GL_RGB, GL_FLOAT, data); 
 
 	ImGui::Begin("CHRROM");
 
-	ImTextureID imTexture = (ImTextureID)(intptr_t)texture;
+	ImTextureID imTexture = (ImTextureID)(intptr_t)CHRROMScreenTexture;
 	ImGui::GetWindowDrawList()->AddCallback(ImGui::GetPlatformIO().DrawCallback_SetSamplerNearest, nullptr);
-	ImGui::Image(imTexture, ImVec2(256*4, 32*4));
+	ImGui::Image(imTexture, ImVec2(128, 128));
 	ImGui::GetWindowDrawList()->AddCallback(ImGui::GetPlatformIO().DrawCallback_SetSamplerLinear, nullptr);
 
 	ImGui::End();

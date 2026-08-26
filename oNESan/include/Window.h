@@ -8,6 +8,8 @@
 #include <imgui/imgui_impl_opengl3.h>
 #include <imgui/imgui_stdlib.h>
 
+#include "tinyfiledialogs.h"
+
 #include <iostream>
 #include <map>
 #include <algorithm>
@@ -51,7 +53,7 @@ private:
 
 	const int MAX_CLOCKS = 100'000'000;
 
-	std::string testRomPath = "src/tests/6502_functional_test.bin";
+	std::string testRomPath = "src/ROMs/nestest.nes";
 
 	// Memory Viewer
 	bool memoryFollowPC = false;
@@ -65,6 +67,9 @@ private:
 	uint16_t currentAddr = 0x0000;
 	std::map<uint16_t, std::string> disassemblyLines;
 	int disassemblyDisplaySize = 20;
+
+	// CHRROM Display
+	unsigned int CHRROMScreenTexture = 0;
 
 	void renderControlWindow(Emulator& emulator);
 	void renderCPUWindow(Emulator& emulator);

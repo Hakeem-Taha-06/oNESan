@@ -104,21 +104,18 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="include\Cartridge.h" />
     <ClInclude Include="include\Application.h" />
     <ClInclude Include="include\Bus.h" />
+    <ClInclude Include="include\Cartridge.h" />
     <ClInclude Include="include\Emulator.h" />
     <ClInclude Include="include\InputManager.h" />
-    <ClInclude Include="include\Window.h" />
-    <ClInclude Include="include\nes6502.h" />
-    <ClInclude Include="include\nes2C02.h" />
     <ClInclude Include="include\Mapper.h" />
     <ClInclude Include="include\Mapper000.h" />
+    <ClInclude Include="include\Window.h" />
+    <ClInclude Include="include\nes2C02.h" />
+    <ClInclude Include="include\nes6502.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Mapper000.cpp" />
-    <ClCompile Include="src\nes2C02.cpp" />
-    <ClCompile Include="src\Cartridge.cpp" />
     <ClCompile Include="dependencies\src\glad.c" />
     <ClCompile Include="dependencies\src\imgui.cpp" />
     <ClCompile Include="dependencies\src\imgui_demo.cpp" />
@@ -128,11 +125,15 @@
     <ClCompile Include="dependencies\src\imgui_stdlib.cpp" />
     <ClCompile Include="dependencies\src\imgui_tables.cpp" />
     <ClCompile Include="dependencies\src\imgui_widgets.cpp" />
+    <ClCompile Include="dependencies\src\tinyfiledialogs.c" />
     <ClCompile Include="src\Application.cpp" />
     <ClCompile Include="src\Bus.cpp" />
+    <ClCompile Include="src\Cartridge.cpp" />
     <ClCompile Include="src\Emulator.cpp" />
+    <ClCompile Include="src\Mapper000.cpp" />
     <ClCompile Include="src\Window.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\nes2C02.cpp" />
     <ClCompile Include="src\nes6502.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
