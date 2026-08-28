@@ -104,6 +104,7 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="include\Controller.h" />
     <ClInclude Include="include\Application.h" />
     <ClInclude Include="include\Bus.h" />
     <ClInclude Include="include\Cartridge.h" />

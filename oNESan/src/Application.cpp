@@ -18,6 +18,9 @@ void Application::run() {
 			for(int i =0; i < 200000; i++)
 				emulator.clock();
 		}
+		else if (window.getEmulationMode() == EmulationMode::Debug) {
+			emulator.clock();
+		}
 		window.endFrame();
 	}
 }

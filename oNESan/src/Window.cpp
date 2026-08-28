@@ -91,7 +91,7 @@ void Window::init() {
 
 void Window::render(Emulator& emulator) {
 	
-	processInput();
+	processInput(emulator);
 
 	//rendering
 	glClearColor(0.2f, 0.2f, 0.5f, 1.0f);
@@ -103,7 +103,7 @@ void Window::render(Emulator& emulator) {
 	ImGui::DockSpaceOverViewport(ImGui::GetMainViewport()->ID, ImGui::GetMainViewport());
 
 	renderControlWindow(emulator);
-	renderCPUWindow(emulator);
+	renderWatchWindow(emulator);
 
 	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
 	renderMemoryWindow(emulator);
@@ -182,25 +182,31 @@ void Window::renderControlWindow(Emulator& emulator) {
 	ImGui::End();
 }
 
-void Window::renderCPUWindow(Emulator& emulator) {
-	ImGui::Begin("CPU");
+void Window::renderWatchWindow(Emulator& emulator) {
+	ImGui::Begin("Registers Watch");
 
-	ImGui::Text("Accumulator:     0x%02X", emulator.bus.cpu.acc);
-	ImGui::Text("X Register:      0x%02X", emulator.bus.cpu.xreg);
-	ImGui::Text("Y Register:      0x%02X", emulator.bus.cpu.yreg);
-	ImGui::Text("Stack Pointer:   0x%04X", emulator.bus.cpu.stkp);
-	ImGui::Text("Program Counter: 0x%04X", emulator.bus.cpu.pc);
+	if (ImGui::TreeNode("Cpu")) {
+		ImGui::Text("Accumulator:     0x%02X", emulator.bus.cpu.acc);
+		ImGui::Text("X Register:      0x%02X", emulator.bus.cpu.xreg);
+		ImGui::Text("Y Register:      0x%02X", emulator.bus.cpu.yreg);
+		ImGui::Text("Stack Pointer:   0x%04X", emulator.bus.cpu.stkp);
+		ImGui::Text("Program Counter: 0x%04X", emulator.bus.cpu.pc);
 
-	ImGui::Separator();
+		ImGui::Separator();
 
-	ImGui::Text("Carry:             %i", emulator.bus.cpu.getFlag(nes6502::C));
-	ImGui::Text("Zero:              %i", emulator.bus.cpu.getFlag(nes6502::Z));
-	ImGui::Text("Interrupt Disable: %i", emulator.bus.cpu.getFlag(nes6502::I));
-	ImGui::Text("Decimal Mode:      %i", emulator.bus.cpu.getFlag(nes6502::D));
-	ImGui::Text("Break:             %i", emulator.bus.cpu.getFlag(nes6502::B));
-	ImGui::Text("Overflow:          %i", emulator.bus.cpu.getFlag(nes6502::V));
-	ImGui::Text("Negative:          %i", emulator.bus.cpu.getFlag(nes6502::N));
+		ImGui::Text("Carry:             %i", emulator.bus.cpu.getFlag(nes6502::C));
+		ImGui::Text("Zero:              %i", emulator.bus.cpu.getFlag(nes6502::Z));
+		ImGui::Text("Interrupt Disable: %i", emulator.bus.cpu.getFlag(nes6502::I));
+		ImGui::Text("Decimal Mode:      %i", emulator.bus.cpu.getFlag(nes6502::D));
+		ImGui::Text("Break:             %i", emulator.bus.cpu.getFlag(nes6502::B));
+		ImGui::Text("Overflow:          %i", emulator.bus.cpu.getFlag(nes6502::V));
+		ImGui::Text("Negative:          %i", emulator.bus.cpu.getFlag(nes6502::N));
 
+		ImGui::TreePop();
+	}
+
+	ImGui::Text("joypad input:     %s", std::bitset<8>(emulator.bus.joypad.input).to_string().c_str());
+	ImGui::Text("joypad shift reg: %s", std::bitset<8>(emulator.bus.joypad.shiftReg).to_string().c_str());
 	ImGui::Text("Total Cycles:      %i", emulator.bus.cpu.totalCycles);
 	ImGui::End();
 }
@@ -439,10 +445,15 @@ void Window::keyEventCallback(GLFWwindow* window, int key, int scancode, int act
 	auto context = static_cast<WindowContext*>(glfwGetWindowUserPointer(window));
 	
 	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
-		if (context->emulationMode == EmulationMode::Manual)
-			context->emulationMode = EmulationMode::Automatic;
-		else if (context->emulationMode == EmulationMode::Automatic)
-			context->emulationMode = EmulationMode::Manual;
+		context->emulationMode = EmulationMode::Automatic;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) {
+		context->emulationMode = EmulationMode::Manual;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) {
+		context->emulationMode = EmulationMode::Debug;
 	}
 	
 	if (action == GLFW_PRESS) {
@@ -453,6 +464,44 @@ void Window::keyEventCallback(GLFWwindow* window, int key, int scancode, int act
 	}
 }
 
-void Window::processInput() {
-	
+void Window::processInput(Emulator& emulator) {
+	if (inputManager.isKeyPressed(GLFW_KEY_W))
+		emulator.bus.joypad.pressButton(Controller::Button::Up);
+	else
+		emulator.bus.joypad.releaseButton(Controller::Button::Up);
+
+	if(inputManager.isKeyPressed(GLFW_KEY_S))
+		emulator.bus.joypad.pressButton(Controller::Button::Down);
+	else
+		emulator.bus.joypad.releaseButton(Controller::Button::Down);
+
+	if (inputManager.isKeyPressed(GLFW_KEY_A))
+		emulator.bus.joypad.pressButton(Controller::Button::Left);
+	else
+		emulator.bus.joypad.releaseButton(Controller::Button::Left);
+
+	if (inputManager.isKeyPressed(GLFW_KEY_D))
+		emulator.bus.joypad.pressButton(Controller::Button::Right);
+	else
+		emulator.bus.joypad.releaseButton(Controller::Button::Right);
+
+	if (inputManager.isKeyPressed(GLFW_KEY_G))
+		emulator.bus.joypad.pressButton(Controller::Button::B);
+	else
+		emulator.bus.joypad.releaseButton(Controller::Button::B);
+
+	if (inputManager.isKeyPressed(GLFW_KEY_H))
+		emulator.bus.joypad.pressButton(Controller::Button::A);
+	else
+		emulator.bus.joypad.releaseButton(Controller::Button::A);
+
+	if (inputManager.isKeyPressed(GLFW_KEY_ENTER))
+		emulator.bus.joypad.pressButton(Controller::Button::Start);
+	else
+		emulator.bus.joypad.releaseButton(Controller::Button::Start);
+
+	if (inputManager.isKeyPressed(GLFW_KEY_J))
+		emulator.bus.joypad.pressButton(Controller::Button::Select);
+	else
+		emulator.bus.joypad.releaseButton(Controller::Button::Select);
 }

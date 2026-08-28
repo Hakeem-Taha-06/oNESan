@@ -52,6 +52,12 @@ uint8_t NesBus::cpuRead(uint16_t addr) {
 	else if (addr >= 0x2000 && addr <= 0x3FFF) { // ppu registers
 		data = ppu.cpuRead(addr & 0x0007);
 	}
+	else if (addr == 0x4016) {
+		data = joypad.read();
+	}
+	else if (addr == 0x4017) {
+		data = joypad.read();
+	}
 	else if (addr >= 0x4020 && addr <= 0xFFFF) { // cartridge PRG-ROM
 		data = cart->cpuRead(addr);
 	}
@@ -64,6 +70,10 @@ void NesBus::cpuWrite(uint16_t addr, uint8_t data) {
 	}
 	else if (addr >= 0x2000 && addr <= 0x3FFF) { // ppu registers
 		ppu.cpuWrite(addr & 0x0007, data);
+	}
+	else if(addr == 0x4016){
+		data &= 0x01;
+		joypad.setLatch(data);
 	}
 	else if (addr >= 0x4020 && addr <= 0xFFFF) { // cartridge PRG-ROM
 		cart->cpuWrite(addr, data);

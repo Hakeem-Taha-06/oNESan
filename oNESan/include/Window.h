@@ -13,6 +13,7 @@
 #include <iostream>
 #include <map>
 #include <algorithm>
+#include <bitset>
 
 #include "InputManager.h"
 
@@ -20,7 +21,8 @@ class Emulator;
 
 enum class EmulationMode {
 	Automatic,
-	Manual
+	Manual, 
+	Debug
 };
 
 struct WindowContext {
@@ -77,13 +79,13 @@ private:
 	unsigned int screenTexture = 0;
 
 	void renderControlWindow(Emulator& emulator);
-	void renderCPUWindow(Emulator& emulator);
+	void renderWatchWindow(Emulator& emulator);
 	void renderMemoryWindow(Emulator& emulator);
 	void renderDisassemblyWindow(Emulator& emulator);
 	void renderCHRROMWindow(Emulator& emulator);
 	void renderGameScreen(Emulator& emulator);
 
 	static void keyEventCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
-	void processInput();
+	void processInput(Emulator& emulator);
 };
 

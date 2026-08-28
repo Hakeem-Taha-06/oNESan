@@ -45,6 +45,7 @@
     <ClInclude Include="include\nes6502.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\Controller.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dependencies\src\glad.c">

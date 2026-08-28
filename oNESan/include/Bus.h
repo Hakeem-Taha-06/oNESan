@@ -7,6 +7,7 @@
 #include "nes6502.h"
 #include "nes2C02.h"
 #include "Cartridge.h"
+#include "Controller.h"
 
 class Bus
 {
@@ -54,6 +55,8 @@ public:
 	nes6502 cpu;
 	nes2C02 ppu;
 	std::shared_ptr<Cartridge> cart;
+	Controller joypad;
+
 	std::array<uint8_t, 2 * 1024> cpuRam;
 
 	int numClocks = 0;
