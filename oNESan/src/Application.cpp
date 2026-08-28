@@ -15,7 +15,8 @@ void Application::run() {
 		window.startFrame();
 		window.render(emulator);
 		if (window.getEmulationMode() == EmulationMode::Automatic) {
-			emulator.clock();
+			for(int i =0; i < 200000; i++)
+				emulator.clock();
 		}
 		window.endFrame();
 	}

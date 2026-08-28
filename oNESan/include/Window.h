@@ -69,13 +69,19 @@ private:
 	int disassemblyDisplaySize = 20;
 
 	// CHRROM Display
-	unsigned int CHRROMScreenTexture = 0;
+	unsigned int CHRROMScreenTexture1 = 0;
+	unsigned int CHRROMScreenTexture2 = 0;
+	int selectedPalette = 0;
+
+	// Game Screen
+	unsigned int screenTexture = 0;
 
 	void renderControlWindow(Emulator& emulator);
 	void renderCPUWindow(Emulator& emulator);
 	void renderMemoryWindow(Emulator& emulator);
 	void renderDisassemblyWindow(Emulator& emulator);
 	void renderCHRROMWindow(Emulator& emulator);
+	void renderGameScreen(Emulator& emulator);
 
 	static void keyEventCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 	void processInput();

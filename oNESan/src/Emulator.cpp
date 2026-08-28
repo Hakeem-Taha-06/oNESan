@@ -35,6 +35,7 @@ void Emulator::load(std::string path) {
 void Emulator::loadCartridge(std::string path) {
 	cart = std::make_shared<Cartridge>(path);
 	bus.insertCartridge(cart);
+	reset();
 }
 
 void Emulator::clock() {

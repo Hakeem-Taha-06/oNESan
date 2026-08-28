@@ -29,6 +29,12 @@ public:
 	inline const std::vector<uint8_t>& getPRGROM() const { return PRGROM; }
 	inline const std::vector<uint8_t>& getCHRROM() const { return CHRROM; }
 
+	enum Mirroring {
+		VERTICAL,
+		HORIZONTAL, 
+		ONESCREEN_LO,
+		ONESCREEN_HI
+	} mirroring = HORIZONTAL;
 private:
 	std::vector<uint8_t> PRGROM;
 	std::vector<uint8_t> CHRROM;

@@ -78,6 +78,11 @@ void NesBus::clock() {
 		cpu.clock();
 	}
 
+	if (ppu.emitNmi) {
+		cpu.nmi();
+		ppu.emitNmi = false;
+	}
+
 	numClocks++;
 }
 

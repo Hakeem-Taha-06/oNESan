@@ -112,6 +112,9 @@ void Window::render(Emulator& emulator) {
 	renderDisassemblyWindow(emulator);
 	renderCHRROMWindow(emulator);
 
+#endif // DEBUG
+	renderGameScreen(emulator);
+	
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
@@ -122,7 +125,8 @@ void Window::render(Emulator& emulator) {
 		ImGui::RenderPlatformWindowsDefault();
 		glfwMakeContextCurrent(backup_current_context);
 	}
-#endif // DEBUG
+
+
 }
 
 void Window::renderControlWindow(Emulator& emulator) {
@@ -146,7 +150,7 @@ void Window::renderControlWindow(Emulator& emulator) {
 	}
 	if (ImGui::Button("Load Test ROM")) {
 		try {
-			emulator.load(testRomPath);
+			emulator.loadCartridge(testRomPath);
 		}
 		catch (std::exception e) {
 			std::cerr << e.what() << std::endl;
@@ -357,27 +361,63 @@ void Window::renderDisassemblyWindow(Emulator& emulator) {
 }
 
 void Window::renderCHRROMWindow(Emulator& emulator) {
-	const float *data = emulator.bus.ppu.getPatternTable(0, 1);
+	ImGui::Begin("CHRROM");
+	ImGui::InputInt("##selectedpalette", &selectedPalette);
+	const float *scr1 = emulator.bus.ppu.getPatternTable(0, selectedPalette);
+	const float *scr2 = emulator.bus.ppu.getPatternTable(1, selectedPalette);
 
-	if(CHRROMScreenTexture == 0)
-		glGenTextures(1, &CHRROMScreenTexture);
+	if(CHRROMScreenTexture1 == 0)
+		glGenTextures(1, &CHRROMScreenTexture1);
+	if (CHRROMScreenTexture2 == 0)
+		glGenTextures(1, &CHRROMScreenTexture2);
 		
-	glBindTexture(GL_TEXTURE_2D, CHRROMScreenTexture);
+	// screen 1
+	glBindTexture(GL_TEXTURE_2D, CHRROMScreenTexture1);
 	
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 128, 128, 0, GL_RGB, GL_FLOAT, data); 
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 128, 128, 0, GL_RGB, GL_FLOAT, scr1); 
 
-	ImGui::Begin("CHRROM");
+	// screen 2
+	glBindTexture(GL_TEXTURE_2D, CHRROMScreenTexture2);
 
-	ImTextureID imTexture = (ImTextureID)(intptr_t)CHRROMScreenTexture;
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 128, 128, 0, GL_RGB, GL_FLOAT, scr2);
+
+	ImTextureID imScrn1Tex = (ImTextureID)(intptr_t)CHRROMScreenTexture1;
+	ImTextureID imScrn2Tex = (ImTextureID)(intptr_t)CHRROMScreenTexture2;
 	ImGui::GetWindowDrawList()->AddCallback(ImGui::GetPlatformIO().DrawCallback_SetSamplerNearest, nullptr);
-	ImGui::Image(imTexture, ImVec2(128, 128));
+	ImGui::Image(imScrn1Tex, ImVec2(128*2, 128*2));
+	ImGui::SameLine();
+	ImGui::Image(imScrn2Tex, ImVec2(128*2, 128*2));
+	ImGui::GetWindowDrawList()->AddCallback(ImGui::GetPlatformIO().DrawCallback_SetSamplerLinear, nullptr);
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+	ImGui::End();
+}
+
+void Window::renderGameScreen(Emulator& emulator) {
+	ImGui::Begin("Screen");
+	const float* screen = emulator.bus.ppu.getScreen();
+
+	if (screenTexture == 0)
+		glGenTextures(1, &screenTexture);
+
+	glBindTexture(GL_TEXTURE_2D, screenTexture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 256, 240, 0, GL_RGB, GL_FLOAT, screen);
+
+	ImTextureID imScrnTex = (ImTextureID)(intptr_t)screenTexture;
+	ImGui::GetWindowDrawList()->AddCallback(ImGui::GetPlatformIO().DrawCallback_SetSamplerNearest, nullptr);
+	ImGui::Image(imScrnTex, ImVec2(256*2, 240*2));
 	ImGui::GetWindowDrawList()->AddCallback(ImGui::GetPlatformIO().DrawCallback_SetSamplerLinear, nullptr);
 
 	ImGui::End();
-	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void Window::startFrame() {
