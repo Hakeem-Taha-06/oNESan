@@ -55,6 +55,7 @@ void nes2C02::clock() {
 			if (mask.renderBG || mask.renderSprites) {
 				vramAddr.nametableY = tramAddr.nametableY;
 				vramAddr.coarseY = tramAddr.coarseY;
+				vramAddr.fineY = tramAddr.fineY;
 			}
 		};
 
@@ -154,8 +155,8 @@ void nes2C02::clock() {
 		int idx = (scanline * 256 + cycle - 1) * 3;
 		uint32_t color = getColorFromPalette(bgPalette, bgPixel);
 		screen[idx + 0] = (float)(color >> 16 & 0x0000FF) / 255;
-		screen[idx + 1] = (float)(color >> 8 & 0x0000FF) / 255;
-		screen[idx + 2] = (float)(color >> 0 & 0x0000FF) / 255;
+		screen[idx + 1] = (float)(color >> 8  & 0x0000FF) / 255;
+		screen[idx + 2] = (float)(color >> 0  & 0x0000FF) / 255;
 	}
 
 	cycle++;
