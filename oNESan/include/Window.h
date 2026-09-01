@@ -84,6 +84,7 @@ private:
 	void renderDisassemblyWindow(Emulator& emulator);
 	void renderCHRROMWindow(Emulator& emulator);
 	void renderGameScreen(Emulator& emulator);
+	void renderOAMWindow(Emulator& emulator);
 
 	static void keyEventCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 	void processInput(Emulator& emulator);

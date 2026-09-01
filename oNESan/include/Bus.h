@@ -59,5 +59,12 @@ public:
 
 	std::array<uint8_t, 2 * 1024> cpuRam;
 
-	int numClocks = 0;
+	int systemClockCounter = 0;
+
+private:
+	uint8_t dmaPage = 0x00;
+	uint8_t dmaAddr = 0x00;
+	uint8_t dmaData = 0x00;
+	bool dmaTransfer = false;
+	bool dmaDummy = false;
 };

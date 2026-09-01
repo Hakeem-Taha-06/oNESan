@@ -6,12 +6,11 @@ Window::Window(int width, int height): WIDTH(width), HEIGHT(height), inputManage
 }
 
 Window::~Window() {
-#ifdef DEBUG
+
 	// ImGui termination (all debug ui stuff can be moved to a separate ui class)
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
-#endif // DEBUG
 
 	glfwTerminate();
 }
@@ -53,7 +52,6 @@ void Window::init() {
 
 	glfwSetKeyCallback(w, Window::keyEventCallback);
 	//setGLFWEventCallbacks(w);
-#ifdef DEBUG
 
 	// Setup Dear ImGui context (all debug ui stuff can be moved to a separate ui class)
 	IMGUI_CHECKVERSION();
@@ -83,7 +81,6 @@ void Window::init() {
 	// Setup Platform/Renderer backends
 	ImGui_ImplGlfw_InitForOpenGL(w, true);                    // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
 	ImGui_ImplOpenGL3_Init("#version 330");
-#endif // DEBUG
 
 	m_window = w;
 
@@ -97,7 +94,6 @@ void Window::render(Emulator& emulator) {
 	glClearColor(0.2f, 0.2f, 0.5f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
-#ifdef DEBUG
 	// IMGUI (all debug ui stuff can be moved to a separate ui class)
 	// Create a dockspace that covers the entire viewport
 	ImGui::DockSpaceOverViewport(ImGui::GetMainViewport()->ID, ImGui::GetMainViewport());
@@ -111,8 +107,8 @@ void Window::render(Emulator& emulator) {
 
 	renderDisassemblyWindow(emulator);
 	renderCHRROMWindow(emulator);
+	renderOAMWindow(emulator);
 
-#endif // DEBUG
 	renderGameScreen(emulator);
 	
 	ImGui::Render();
@@ -126,12 +122,10 @@ void Window::render(Emulator& emulator) {
 		glfwMakeContextCurrent(backup_current_context);
 	}
 
-
 }
 
 void Window::renderControlWindow(Emulator& emulator) {
 	ImGui::Begin("Debug Window");
-
 
 	ImGui::InputText("##RomPath", &testRomPath);
 	ImGui::SameLine();
@@ -374,7 +368,7 @@ void Window::renderCHRROMWindow(Emulator& emulator) {
 
 	if(CHRROMScreenTexture1 == 0)
 		glGenTextures(1, &CHRROMScreenTexture1);
-	if (CHRROMScreenTexture2 == 0)
+	if(CHRROMScreenTexture2 == 0)
 		glGenTextures(1, &CHRROMScreenTexture2);
 		
 	// screen 1
@@ -426,15 +420,33 @@ void Window::renderGameScreen(Emulator& emulator) {
 	ImGui::End();
 }
 
+void Window::renderOAMWindow(Emulator& emulator) {
+	ImGui::Begin("OAM");
+
+	if (ImGui::BeginTable("##oamlist", 1, ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit)) {
+		for (int i = 0; i < 16; ++i) {
+			ImGui::TableNextRow();
+			
+			ImGui::TableSetColumnIndex(0);
+			uint8_t y      = emulator.bus.ppu.oamArray[i * 4 + 0];
+			uint8_t id     = emulator.bus.ppu.oamArray[i * 4 + 1];
+			uint8_t attrib = emulator.bus.ppu.oamArray[i * 4 + 2];
+			uint8_t x      = emulator.bus.ppu.oamArray[i * 4 + 3];
+			ImGui::Text("(%03d, %03d), ID: %03d, ATT: %03d", x, y, id, attrib);
+		}
+		ImGui::EndTable();
+	}
+
+	ImGui::End();
+}
+
 void Window::startFrame() {
 	glfwPollEvents();
 
-#ifdef DEBUG
 	// Start the Dear ImGui frame (all debug ui stuff can be moved to a separate ui class)
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
-#endif // DEBUG
 }
 
 void Window::endFrame() {

@@ -71,6 +71,12 @@ void NesBus::cpuWrite(uint16_t addr, uint8_t data) {
 	else if (addr >= 0x2000 && addr <= 0x3FFF) { // ppu registers
 		ppu.cpuWrite(addr & 0x0007, data);
 	}
+	else if (addr == 0x4014) {
+		// start DMA, suspend cpu for 512 clock cycles
+		dmaPage = data;
+		dmaAddr = 0x00;
+		dmaTransfer = true;
+	}
 	else if(addr == 0x4016){
 		data &= 0x01;
 		joypad.setLatch(data);
@@ -84,8 +90,36 @@ void NesBus::clock() {
 	ppu.clock();
 
 	// CPU is 3 times slower than the ppu (NTSC)
-	if (numClocks % 3 == 0) {
-		cpu.clock();
+	if (systemClockCounter % 3 == 0) {
+		if (dmaTransfer) {
+			// dma can only start on an odd cycle
+			if (dmaDummy) {
+
+				if (systemClockCounter % 2 == 1) {
+					dmaDummy = false;
+				}
+			
+			}
+			else {
+				// read data on even cycles
+				if (systemClockCounter % 2 == 0) {
+					dmaData = cpuRead(dmaPage << 8 | dmaAddr);
+				}// write data on odd cycles
+				else {
+					ppu.oamArray[dmaAddr] = dmaData;
+					dmaAddr++;
+
+					// if the address wraps around, then we have written the full 255 bytes, so we exit DMA
+					if (dmaAddr == 0x00) {
+						dmaTransfer = false;
+						dmaDummy = true;
+					}
+				}
+			}
+		}
+		else {
+			cpu.clock();
+		}
 	}
 
 	if (ppu.emitNmi) {
@@ -93,7 +127,7 @@ void NesBus::clock() {
 		ppu.emitNmi = false;
 	}
 
-	numClocks++;
+	systemClockCounter++;
 }
 
 void NesBus::reset() {

@@ -186,6 +186,7 @@ uint8_t nes2C02::cpuRead(uint16_t addr) {
 		case 3:    // OAMADDR
 			break;
 		case 4:    // OAMDATA
+			data = oamArray[oamAddr];
 			break;
 		case 5:    // SCROLL
 			break;
@@ -216,8 +217,10 @@ void nes2C02::cpuWrite(uint16_t addr, uint8_t data) {
 		case 2:    // STATUS
 			break;
 		case 3:    // OAMADDR
+			oamAddr = data;
 			break;
 		case 4:    // OAMDATA
+			oamArray[oamAddr]= data;
 			break;
 		case 5:    // SCROLL
 			if (addressLatch == 0) {

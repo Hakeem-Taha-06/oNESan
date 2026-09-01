@@ -24,6 +24,7 @@ public:
 	uint32_t getColorFromPalette(uint8_t palette, uint8_t pixel);
 	float* getPatternTable(uint8_t i, uint8_t palette);
 	const float* getScreen();
+	uint8_t* oamArray =  (uint8_t*)OAM; 
 
 	bool emitNmi = false;
 private:
@@ -141,5 +142,16 @@ private:
 	uint16_t bgShifterPatternHi = 0x0000;
 	uint16_t bgShifterAttribLo = 0x0000;
 	uint16_t bgShifterAttribHi = 0x0000;
+
+
+	// OAM
+	struct OAMEntry{
+		uint8_t y         = 0x00;
+		uint8_t id        = 0x00;
+		uint8_t attribute = 0x00;
+		uint8_t x         = 0x00;
+	} OAM[64];
+
+	uint8_t oamAddr = 0x00;
 };
 
