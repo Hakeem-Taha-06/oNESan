@@ -27,6 +27,7 @@ public:
 	uint8_t* oamArray =  (uint8_t*)OAM; 
 
 	bool emitNmi = false;
+	bool frameComplete = false;
 private:
 	static constexpr uint32_t NES_PALETTE[64] = {
 		// Row 0x00 - 0x0F
@@ -143,6 +144,7 @@ private:
 	uint16_t bgShifterAttribLo = 0x0000;
 	uint16_t bgShifterAttribHi = 0x0000;
 
+	// Foreground Rendering
 
 	// OAM
 	struct OAMEntry{
@@ -153,5 +155,13 @@ private:
 	} OAM[64];
 
 	uint8_t oamAddr = 0x00;
+
+	OAMEntry spriteScanline[8];
+	uint8_t spriteCount = 0;
+	uint8_t spriteShifterPatternLo[8];
+	uint8_t spriteShifterPatternHi[8];
+
+	// HELPER FUNCTIONS
+	uint8_t flipByte(uint8_t byte);
 };
 

@@ -67,7 +67,7 @@ void nes2C02::clock() {
 			bgShifterAttribLo = (bgShifterAttribLo & 0xFF00) | (bgNextTileAttrib & 0b01 ? 0xFF : 0x00);
 			bgShifterAttribHi = (bgShifterAttribHi & 0xFF00) | (bgNextTileAttrib & 0b10 ? 0xFF : 0x00);
 		};
-
+	
 	auto updateShifters = [&]() {
 			if (mask.renderBG) {
 				bgShifterPatternLo <<= 1;
@@ -76,12 +76,31 @@ void nes2C02::clock() {
 				bgShifterAttribLo <<= 1;
 				bgShifterAttribHi <<= 1;
 			}
+
+			if (mask.renderSprites && cycle >= 1 && cycle < 258) {
+				for (int i = 0; i < 8; ++i) {
+					if (spriteScanline[i].x > 0) {
+						spriteScanline[i].x--;
+					}
+					else {
+						spriteShifterPatternLo[i] <<= 1;
+						spriteShifterPatternHi[i] <<= 1;
+					}
+				}
+			}
 		};
 
 	// visible scanlines
 	if (scanline >= -1 && scanline < 240) {
-		if (scanline == -1 && cycle == 1) {
+		if (scanline == -1 && cycle == 1) { 
 			status.verticalBlank = 0;
+
+			status.spriteOverflow = 0;
+
+			for (int i = 0; i < 8; ++i) {
+				spriteShifterPatternLo[i] = 0;
+				spriteShifterPatternHi[i] = 0;
+			}
 		}
 
 		if ((cycle >= 2 && cycle < 258) || (cycle >= 321 && cycle < 338)) {
@@ -121,11 +140,108 @@ void nes2C02::clock() {
 		}
 
 		if (cycle == 257) {
+			loadBackgroundShifters();
 			transferAddressX();
+		}
+
+		if (cycle == 338 || cycle == 340) {
+			bgNextTileID = ppuRead(0x2000 | vramAddr.reg & 0x0FFF);
 		}
 
 		if (scanline == -1 && cycle >= 280 && cycle < 305) {
 			transferAddressY();
+		}
+
+		if (scanline == -1 && cycle >= 280 && cycle < 305) {
+			transferAddressY();
+		}
+
+		// FOREGROUND RENDERING (not cycle accurate)
+		if (cycle == 257 && scanline >= 0) {
+			std::memset(spriteScanline, 0xFF, 8 * sizeof(OAMEntry));
+			spriteCount = 0;
+
+			// for each sprite we check if the current scanline is contained within it
+			uint8_t OAMidx = 0;
+			while (OAMidx < 64 && spriteCount < 9) {
+				int16_t diff = (int16_t)scanline - (int16_t)OAM[OAMidx].y;
+				// sprite height could be 16 or 8 pixels long
+				if (diff >= 0 && diff < (control.spriteSize ? 16 : 8)) {
+					if (spriteCount < 8) {
+						memcpy(&spriteScanline[spriteCount], &OAM[OAMidx], sizeof(OAMEntry));
+						spriteCount++;
+					}
+				}
+				OAMidx++;
+			}
+			status.spriteOverflow = (spriteCount > 8);
+		}
+
+		if (cycle == 340) {
+			for (uint8_t i = 0; i < spriteCount; ++i) {
+				uint8_t spritePatternBitsLo, spritePatternBitsHi;
+				uint8_t spritePatternAddrLo, spritePatternAddrHi;
+
+				
+				if (control.spriteSize == 0) { // 8*8 sprite mode
+					if (!(spriteScanline[i].attribute & 0x80)) { // not flipped vertically (normal
+						spritePatternAddrLo =
+							(control.patternSprite << 12)       // pattern table number
+							| (spriteScanline[i].id << 4)       // which tile in the pattern table
+							| (scanline - spriteScanline[i].y); // which row of the tile
+					}
+					else { // flipped vertically
+						spritePatternAddrLo =
+							(control.patternSprite << 12)             // pattern table number
+							| (spriteScanline[i].id << 4)             // which tile in the pattern table
+							| (7 - (scanline - spriteScanline[i].y)); // which row of the tile (inverted)
+					}
+				}
+				else { // 8*16 sprite mode
+					if (!(spriteScanline[i].attribute & 0x80)) { // not flipped vertically (normal
+						if (scanline - spriteScanline->y < 8) { // top 8 rows 
+							spritePatternAddrLo =
+								((spriteScanline[i].id & 0x01) << 12)	     // pattern table number (implied by the bottom bit of the id for some reason)
+								| ((spriteScanline[i].id & 0xFE) << 4)	     // which tile in the pattern table
+								| ((scanline - spriteScanline[i].y) & 0x07); // which row in the tile
+						}
+						else { // bottom 8 rows
+							spritePatternAddrLo =
+								((spriteScanline[i].id & 0x01) << 12)	     // pattern table number (implied by the bottom bit of the id for some reason)
+								| (((spriteScanline[i].id & 0xFE) + 1) << 4) // which tile in the pattern table
+								| ((scanline - spriteScanline[i].y) & 0x07); // which row in the tile
+						}
+					}
+					else { // flipped vertically
+						if (scanline - spriteScanline->y < 8) { // top 8 rows 
+							spritePatternAddrLo =
+								((spriteScanline[i].id & 0x01) << 12)	         // pattern table number (implied by the bottom bit of the id for some reason)
+								| (((spriteScanline[i].id & 0xFE) + 1) << 4)     // which tile in the pattern table
+								| (7 - ((scanline - spriteScanline[i].y) & 0x07)); // which row in the tile (inverted)
+						}
+						else { // bottom 8 rows
+							spritePatternAddrLo =
+								((spriteScanline[i].id & 0x01) << 12)	         // pattern table number (implied by the bottom bit of the id for some reason)
+								| ((spriteScanline[i].id & 0xFE) << 4)	         // which tile in the pattern table
+								| (7 - ((scanline - spriteScanline[i].y) & 0x07)); // which row in the tile (inverted)
+						}
+					}
+				}
+
+			
+				spritePatternAddrHi = spritePatternAddrLo + 8;
+
+				spritePatternBitsLo = ppuRead(spritePatternAddrLo);
+				spritePatternBitsHi = ppuRead(spritePatternAddrHi);
+
+				if (spriteScanline[i].attribute & 0x40) { // horizontal flip
+					spritePatternBitsLo = flipByte(spritePatternBitsLo);
+					spritePatternBitsHi = flipByte(spritePatternBitsHi);
+				}
+
+				spriteShifterPatternLo[i] = spritePatternBitsLo;
+				spriteShifterPatternHi[i] = spritePatternBitsHi;
+			}
 		}
 	}
 
@@ -142,18 +258,66 @@ void nes2C02::clock() {
 	uint8_t bgPalette = 0x00;
 	if (mask.renderBG) {
 		uint16_t bitMux = 0x8000 >> fineX;
-		uint8_t pixel0 = (bgShifterPatternLo & bitMux) > 0;
-		uint8_t pixel1 = (bgShifterPatternHi & bitMux) > 0;
-		bgPixel = (pixel1 << 1) | pixel0;
+		uint8_t pixelLo = (bgShifterPatternLo & bitMux) > 0;
+		uint8_t pixelHi = (bgShifterPatternHi & bitMux) > 0;
+		bgPixel = (pixelHi << 1) | pixelLo;
 
-		uint8_t pal0 = (bgShifterAttribLo & bitMux) > 0;
-		uint8_t pal1 = (bgShifterAttribHi & bitMux) > 0;
-		bgPalette = (pal1 << 1) | pal0;
+		uint8_t palLo = (bgShifterAttribLo & bitMux) > 0;
+		uint8_t palHi = (bgShifterAttribHi & bitMux) > 0;
+		bgPalette = (palHi << 1) | palLo;
 	}
 
+	uint8_t fgPixel = 0x00;
+	uint8_t fgPalette = 0x00;
+	uint8_t fgPriority = 0x00;
+	if (mask.renderSprites) {
+		for (uint8_t i = 0; i < spriteCount; ++i) {
+			if (spriteScanline[i].x == 0) {
+				uint8_t fgPixelLo = (spriteShifterPatternLo[i] & 0x80) > 0;
+				uint8_t fgPixelHi = (spriteShifterPatternHi[i] & 0x80) > 0;
+				fgPixel = (fgPixelHi << 1) | fgPixelLo;
+
+				fgPalette = (spriteScanline[i].attribute & 0x03) + 0x04;    // sprite palettes are the last four palettes
+				fgPriority = (spriteScanline[i].attribute & 0x20) == 0; 
+
+				// only the first non transparent pixel found gets drawn
+				if (fgPixel != 0) {
+					break;
+				}
+			}
+		}
+	}
+
+	uint8_t pixel = 0x00;
+	uint8_t palette = 0x00;
+
+	if (bgPixel == 0 && fgPixel == 0) {
+		pixel = 0x00;
+		palette = 0x00;
+	}
+	else if(bgPixel > 0 && fgPixel == 0){
+		pixel = bgPixel;
+		palette = bgPalette;
+	}
+	else if (bgPixel == 0 && fgPixel > 0) {
+		pixel = fgPixel;
+		palette = fgPalette;
+	}
+	else if (bgPixel > 0 && fgPixel > 0) {
+		if (fgPriority) {
+			pixel = fgPixel;
+			palette = fgPalette;
+		}
+		else {
+			pixel = bgPixel;
+			palette = bgPalette;
+		}
+	}
+
+	// actual screen drawing
 	if (scanline >= 0 && scanline < 240 && cycle >= 1 && cycle <= 256) {
 		int idx = (scanline * 256 + cycle - 1) * 3;
-		uint32_t color = getColorFromPalette(bgPalette, bgPixel);
+		uint32_t color = getColorFromPalette(palette, pixel);
 		screen[idx + 0] = (float)(color >> 16 & 0x0000FF) / 255;
 		screen[idx + 1] = (float)(color >> 8  & 0x0000FF) / 255;
 		screen[idx + 2] = (float)(color >> 0  & 0x0000FF) / 255;
@@ -162,11 +326,10 @@ void nes2C02::clock() {
 	cycle++;
 	if (cycle >= 341) {
 		cycle = 0;
-
 		scanline++;
-		
 		if (scanline >= 261) {
 			scanline = -1;
+			frameComplete = true;
 		}
 	}
 }
@@ -379,4 +542,25 @@ void nes2C02::ppuWrite(uint16_t addr, uint8_t data) {
 
 		palettes[addr] = data;
 	}
+}
+
+// HELPER FUNCTIONS
+
+// flips a byte
+//uint8_t nes2C02::flipByte(uint8_t byte) {
+//	uint8_t flipped = 0x00;
+//	for (int i = 8; i > 0; --i) {
+//		flipped = flipped | ((byte & 0x01) << i);
+//		byte >>= 1;
+//	}
+//
+//	return flipped;
+//}
+
+// Divide and Conquer algorithm (hacky method)
+uint8_t nes2C02::flipByte(uint8_t byte) {
+	byte = (byte & 0xF0) >> 4 | (byte & 0x0F) << 4;
+	byte = (byte & 0xCC) >> 2 | (byte & 0x33) << 2;
+	byte = (byte & 0xAA) >> 1 | (byte & 0x55) << 1;
+	return byte;
 }
