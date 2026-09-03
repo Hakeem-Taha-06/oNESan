@@ -1,7 +1,7 @@
 # oNESan
 NES emulator learning project
 
-<img width="1920" height="1050" alt="Screenshot 2026-08-02 180609" src="https://github.com/user-attachments/assets/1763e194-62a4-4151-ace7-3e63dbd93a06" />
+https://github.com/user-attachments/assets/e6a5f416-9462-4fc1-8cc0-9bab39fa2c97
 
 ## Credits
 
