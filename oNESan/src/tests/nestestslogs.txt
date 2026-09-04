@@ -35,3 +35,12 @@ but CPY didn't set the carry flag properly for it to loop, because i had copied 
 
 CONCLUSION:
 Copy-Paste bug
+
+----------------------------------------------------------------------
+4/9/2026
+Indirect x addressing issue:
+1- error code $59 in nestest.txt in indirect x section.
+
+Conclusion:
+ANDed 0x00FF bit mask before adding 1 to the ptr to when getting the high byte of the target address
+
