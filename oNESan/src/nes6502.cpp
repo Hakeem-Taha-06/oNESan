@@ -272,11 +272,11 @@ uint8_t nes6502::IZX() {
 	pc++;
 
 	// add the xreg to it and wrap around, this value represents the address of the target location
-	uint16_t ptr = (zp + xreg) & 0x00FF;
+	uint16_t ptr = (zp + (uint16_t)xreg);
 
 	// read the two bytes at the location specified, this is the target location
-	uint16_t lo = read(ptr);
-	uint16_t hi = read(ptr + 1);
+	uint16_t lo = read(ptr & 0x00FF);
+	uint16_t hi = read((ptr + 1) & 0x00FF);
 
 	addr_abs = (hi << 8) | lo;
 
