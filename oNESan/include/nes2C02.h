@@ -163,6 +163,9 @@ private:
 	uint8_t spriteShifterPatternLo[8];
 	uint8_t spriteShifterPatternHi[8];
 
+	bool spriteZeroHitPossible = false;
+	bool spriteZeroBeingRendered = false;
+
 	// HELPER FUNCTIONS
 	uint8_t flipByte(uint8_t byte);
 

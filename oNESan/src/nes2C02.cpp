@@ -100,7 +100,7 @@ void nes2C02::clock() {
 
 		if (scanline == -1 && cycle == 1) { 
 			status.verticalBlank = 0;
-
+			status.spriteZeroHit = 0;
 			status.spriteOverflow = 0;
 
 			for (int i = 0; i < 8; ++i) {
@@ -172,6 +172,7 @@ void nes2C02::clock() {
 				spriteShifterPatternHi[i] = 0;
 			}
 
+			spriteZeroHitPossible = false;
 			// for each sprite we check if the current scanline is contained within it
 			uint8_t OAMidx = 0;
 			while (OAMidx < 64 && spriteCount < 9) {
@@ -179,6 +180,11 @@ void nes2C02::clock() {
 				// sprite height could be 16 or 8 pixels long
 				if (diff >= 0 && diff < (control.spriteSize ? 16 : 8)) {
 					if (spriteCount < 8) {
+
+						if (OAMidx == 0) {
+							spriteZeroHitPossible = true;
+						}
+
 						memcpy(&spriteScanline[spriteCount], &OAM[OAMidx], sizeof(OAMEntry));
 						spriteCount++;
 					}
@@ -191,7 +197,7 @@ void nes2C02::clock() {
 		if (cycle == 340) {
 			for (uint8_t i = 0; i < spriteCount; ++i) {
 				uint8_t spritePatternBitsLo, spritePatternBitsHi;
-				uint8_t spritePatternAddrLo, spritePatternAddrHi;
+				uint16_t spritePatternAddrLo, spritePatternAddrHi;
 
 				if (control.spriteSize == 0) { // 8*8 sprite mode
 					if (!(spriteScanline[i].attribute & 0x80)) { // not flipped vertically (normal
@@ -282,6 +288,7 @@ void nes2C02::clock() {
 	uint8_t fgPriority = 0x00;
 	if (mask.renderSprites) {
 		for (uint8_t i = 0; i < spriteCount; ++i) {
+			spriteZeroBeingRendered = false;
 			if (spriteScanline[i].x == 0) {
 				uint8_t fgPixelLo = (spriteShifterPatternLo[i] & 0x80) > 0;
 				uint8_t fgPixelHi = (spriteShifterPatternHi[i] & 0x80) > 0;
@@ -292,6 +299,11 @@ void nes2C02::clock() {
 
 				// only the first non transparent pixel found gets drawn
 				if (fgPixel != 0) {
+
+					if (i == 0) {
+						spriteZeroBeingRendered = true;
+					}
+
 					break;
 				}
 			}
@@ -321,6 +333,19 @@ void nes2C02::clock() {
 		else {
 			pixel = bgPixel;
 			palette = bgPalette;
+		}
+
+		if (spriteZeroHitPossible && spriteZeroBeingRendered) {
+			if (~(mask.renderBGLeft | mask.renderSpritesLeft)) {
+				if (cycle >= 9 && cycle < 258) {
+					status.spriteZeroHit = 1;
+				}
+			}
+			else {
+				if (cycle >= 1 && cycle < 258) {
+					status.spriteZeroHit = 1;
+				}
+			}
 		}
 	}
 
