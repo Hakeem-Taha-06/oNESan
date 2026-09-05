@@ -12,8 +12,10 @@ public:
 		
 	};
 
-	virtual uint16_t cpuMapAddress(uint16_t addr) = 0;
-	virtual uint16_t ppuMapAddress(uint16_t addr) = 0;
+	virtual bool cpuMapRead(uint16_t addr, uint16_t& mappedAddr) = 0;
+	virtual bool cpuMapWrite(uint16_t addr, uint16_t& mappedAddr) = 0;
+	virtual bool ppuMapRead(uint16_t addr, uint16_t& mappedAddr) = 0;
+	virtual bool ppuMapWrite(uint16_t addr, uint16_t& mappedAddr) = 0;
 
 protected:
 	int numPRGBanks, numCHRBanks;

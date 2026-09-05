@@ -78,7 +78,7 @@ void nes2C02::clock() {
 			}
 
 			if (mask.renderSprites && cycle >= 1 && cycle < 258) {
-				for (int i = 0; i < 8; ++i) {
+				for (int i = 0; i < spriteCount; ++i) {
 					if (spriteScanline[i].x > 0) {
 						spriteScanline[i].x--;
 					}
@@ -92,6 +92,12 @@ void nes2C02::clock() {
 
 	// visible scanlines
 	if (scanline >= -1 && scanline < 240) {
+
+		// odd frame cycle skip
+		if (scanline == 0 && cycle == 0) {
+			cycle = 1;
+		}
+
 		if (scanline == -1 && cycle == 1) { 
 			status.verticalBlank = 0;
 
@@ -124,10 +130,10 @@ void nes2C02::clock() {
 					bgNextTileAttrib &= 0x03;
 					break;
 				case 4:
-					bgNextTileLsb = ppuRead((control.patternBG << 12) + (bgNextTileID << 4) + vramAddr.fineY);
+					bgNextTileLsb = ppuRead((control.patternBG << 12) + ((uint16_t)bgNextTileID << 4) + vramAddr.fineY);
 					break;
 				case 6:
-					bgNextTileMsb = ppuRead((control.patternBG << 12) + (bgNextTileID << 4) + vramAddr.fineY + 8);
+					bgNextTileMsb = ppuRead((control.patternBG << 12) + ((uint16_t)bgNextTileID << 4) + vramAddr.fineY + 8);
 					break;
 				case 7:
 					incrementScrollX();
@@ -161,6 +167,11 @@ void nes2C02::clock() {
 			std::memset(spriteScanline, 0xFF, 8 * sizeof(OAMEntry));
 			spriteCount = 0;
 
+			for (uint8_t i = 0; i < 8; ++i) {
+				spriteShifterPatternLo[i] = 0;
+				spriteShifterPatternHi[i] = 0;
+			}
+
 			// for each sprite we check if the current scanline is contained within it
 			uint8_t OAMidx = 0;
 			while (OAMidx < 64 && spriteCount < 9) {
@@ -182,7 +193,6 @@ void nes2C02::clock() {
 				uint8_t spritePatternBitsLo, spritePatternBitsHi;
 				uint8_t spritePatternAddrLo, spritePatternAddrHi;
 
-				
 				if (control.spriteSize == 0) { // 8*8 sprite mode
 					if (!(spriteScanline[i].attribute & 0x80)) { // not flipped vertically (normal
 						spritePatternAddrLo =
@@ -199,7 +209,7 @@ void nes2C02::clock() {
 				}
 				else { // 8*16 sprite mode
 					if (!(spriteScanline[i].attribute & 0x80)) { // not flipped vertically (normal
-						if (scanline - spriteScanline->y < 8) { // top 8 rows 
+						if (scanline - spriteScanline[i].y < 8) { // top 8 rows 
 							spritePatternAddrLo =
 								((spriteScanline[i].id & 0x01) << 12)	     // pattern table number (implied by the bottom bit of the id for some reason)
 								| ((spriteScanline[i].id & 0xFE) << 4)	     // which tile in the pattern table
@@ -213,17 +223,17 @@ void nes2C02::clock() {
 						}
 					}
 					else { // flipped vertically
-						if (scanline - spriteScanline->y < 8) { // top 8 rows 
+						if (scanline - spriteScanline[i].y < 8) { // top 8 rows 
 							spritePatternAddrLo =
 								((spriteScanline[i].id & 0x01) << 12)	         // pattern table number (implied by the bottom bit of the id for some reason)
 								| (((spriteScanline[i].id & 0xFE) + 1) << 4)     // which tile in the pattern table
-								| (7 - ((scanline - spriteScanline[i].y) & 0x07)); // which row in the tile (inverted)
+								| (7 - (scanline - spriteScanline[i].y) & 0x07); // which row in the tile (inverted)
 						}
 						else { // bottom 8 rows
 							spritePatternAddrLo =
 								((spriteScanline[i].id & 0x01) << 12)	         // pattern table number (implied by the bottom bit of the id for some reason)
 								| ((spriteScanline[i].id & 0xFE) << 4)	         // which tile in the pattern table
-								| (7 - ((scanline - spriteScanline[i].y) & 0x07)); // which row in the tile (inverted)
+								| (7 - (scanline - spriteScanline[i].y) & 0x07); // which row in the tile (inverted)
 						}
 					}
 				}
@@ -383,7 +393,7 @@ void nes2C02::cpuWrite(uint16_t addr, uint8_t data) {
 			oamAddr = data;
 			break;
 		case 4:    // OAMDATA
-			oamArray[oamAddr]= data;
+			oamArray[oamAddr] = data;
 			break;
 		case 5:    // SCROLL
 			if (addressLatch == 0) {
@@ -401,7 +411,7 @@ void nes2C02::cpuWrite(uint16_t addr, uint8_t data) {
 		case 6:    // PPUADDR
 			if (addressLatch == 0) { 
 				// Big Endian, first byte is the high byte
-				tramAddr.reg = (tramAddr.reg & 0x00FF) | (data << 8);
+				tramAddr.reg = (tramAddr.reg & 0x00FF) | (uint16_t)((data & 0x3F) << 8);
 				addressLatch = 1;
 			}
 			else {
@@ -465,9 +475,11 @@ uint8_t nes2C02::ppuRead(uint16_t addr) {
 	uint8_t data = 0x00;
 	addr &= 0x3FFF;
 
-	// Mapped by cartridge
-	if (addr >= 0x0000 && addr <= 0x1FFF) {
-		data = cart->ppuRead(addr);
+	if (cart->ppuRead(addr, data)) {
+
+	}
+	else if (addr >= 0x0000 && addr <= 0x1FFF) {
+		data = patternTables[(addr & 0x1000)>>12][addr & 0x0FFF];
 	}
 	else if (addr >= 0x02000 && addr <= 0x3EFF) {
 		addr &= 0x0FFF;
@@ -478,7 +490,7 @@ uint8_t nes2C02::ppuRead(uint16_t addr) {
 				data = nametables[1][addr & 0x03FF];
 			if (addr >= 0x0800 && addr <= 0x0BFF)
 				data = nametables[0][addr & 0x03FF];
-			if (addr >= 0x0C00 && addr <= 0x0EFF)
+			if (addr >= 0x0C00 && addr <= 0x0FFF)
 				data = nametables[1][addr & 0x03FF];
 		}
 		else if (cart->mirroring == Cartridge::Mirroring::HORIZONTAL) {
@@ -488,7 +500,7 @@ uint8_t nes2C02::ppuRead(uint16_t addr) {
 				data = nametables[0][addr & 0x03FF];
 			if (addr >= 0x0800 && addr <= 0x0BFF)
 				data = nametables[1][addr & 0x03FF];
-			if (addr >= 0x0C00 && addr <= 0x0EFF)
+			if (addr >= 0x0C00 && addr <= 0x0FFF)
 				data = nametables[1][addr & 0x03FF];
 		}
 	}
@@ -506,8 +518,11 @@ uint8_t nes2C02::ppuRead(uint16_t addr) {
 }
 
 void nes2C02::ppuWrite(uint16_t addr, uint8_t data) {
-	if (addr >= 0x0000 && addr <= 0x1FFF) {
-		cart->ppuWrite(addr, data);
+	if (cart->ppuWrite(addr, data)) {
+
+	}
+	else if (addr >= 0x0000 && addr <= 0x1FFF) {
+		patternTables[(addr & 0x1000) >> 12][addr & 0x0FFF] = data;
 	}
 	else if (addr >= 0x2000 && addr <= 0x3EFF) {
 		addr &= 0x0FFF;
@@ -518,7 +533,7 @@ void nes2C02::ppuWrite(uint16_t addr, uint8_t data) {
 				nametables[1][addr & 0x03FF] = data;
 			if (addr >= 0x0800 && addr <= 0x0BFF)
 				nametables[0][addr & 0x03FF] = data;
-			if (addr >= 0x0C00 && addr <= 0x0EFF)
+			if (addr >= 0x0C00 && addr <= 0x0FFF)
 				nametables[1][addr & 0x03FF] = data;
 		}
 		else if (cart->mirroring == Cartridge::Mirroring::HORIZONTAL) {
@@ -528,10 +543,9 @@ void nes2C02::ppuWrite(uint16_t addr, uint8_t data) {
 				nametables[0][addr & 0x03FF] = data;
 			if (addr >= 0x0800 && addr <= 0x0BFF)
 				nametables[1][addr & 0x03FF] = data;
-			if (addr >= 0x0C00 && addr <= 0x0EFF)
+			if (addr >= 0x0C00 && addr <= 0x0FFF)
 				nametables[1][addr & 0x03FF] = data;
 		}
-
 	}
 	else if (addr >= 0x3F00 && addr <= 0x3FFF) {
 		addr &= 0x001F;
@@ -542,6 +556,28 @@ void nes2C02::ppuWrite(uint16_t addr, uint8_t data) {
 
 		palettes[addr] = data;
 	}
+}
+
+void nes2C02::reset() {
+	cycle = 0;
+	scanline = 0;
+	status.reg = 0x00;
+	mask.reg = 0x00;
+	control.reg = 0x00;
+	addressLatch = 0x00;
+	ppuDataBuffer = 0x00;
+	vramAddr.reg = 0x00;
+	tramAddr.reg = 0x00;
+	fineX = 0x00;
+	bgNextTileID = 0x00;
+	bgNextTileAttrib = 0x00;
+	bgNextTileLsb = 0x00;
+	bgNextTileMsb = 0x00;
+	bgShifterPatternLo = 0x0000;
+	bgShifterPatternHi = 0x0000;
+	bgShifterAttribLo = 0x0000;
+	bgShifterAttribHi = 0x0000;
+	std::memset(OAM, 0x00, sizeof(OAM));
 }
 
 // HELPER FUNCTIONS
@@ -557,7 +593,7 @@ void nes2C02::ppuWrite(uint16_t addr, uint8_t data) {
 //	return flipped;
 //}
 
-// Divide and Conquer algorithm (hacky method)
+// flips a byte (Divide and Conquer algorithm aka O(1) hacky method)
 uint8_t nes2C02::flipByte(uint8_t byte) {
 	byte = (byte & 0xF0) >> 4 | (byte & 0x0F) << 4;
 	byte = (byte & 0xCC) >> 2 | (byte & 0x33) << 2;

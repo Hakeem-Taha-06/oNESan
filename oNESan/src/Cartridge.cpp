@@ -54,33 +54,46 @@ Cartridge::~Cartridge() {
 }
 
 
-uint8_t Cartridge::cpuRead(uint16_t addr) {
-	uint8_t data = 0x00;
+bool Cartridge::cpuRead(uint16_t addr, uint8_t& data) {
 
-	if (addr >= 0x4020 && addr <= 0xFFFF) {
-		data = PRGROM[mapper->cpuMapAddress(addr)];
+	uint16_t mappedAddr = 0x0000;
+
+	if (mapper->cpuMapRead(addr, mappedAddr)) {
+		data = PRGROM[mappedAddr];
+		return true;
 	}
 
-	return data;
+	return false;
 }
-void Cartridge::cpuWrite(uint16_t addr, uint8_t data) {
-	if (addr >= 0x4020 && addr <= 0xFFFF) {
-		PRGROM[mapper->cpuMapAddress(addr)] = data;
+bool Cartridge::cpuWrite(uint16_t addr, uint8_t data) {
+	uint16_t mappedAddr = 0x0000;
+
+	if (mapper->cpuMapWrite(addr, mappedAddr)) {
+		PRGROM[mappedAddr] = data;
+		return true;
 	}
+
+	return false;
 }
 
-uint8_t Cartridge::ppuRead(uint16_t addr) {
-	uint8_t data = 0x00;
+bool Cartridge::ppuRead(uint16_t addr, uint8_t& data) {
 
-	if (addr >= 0x0000 && addr <= 0x1FFF) {
-		data = CHRROM[mapper->ppuMapAddress(addr)];
+	uint16_t mappedAddr = 0x0000;
+	if (mapper->ppuMapRead(addr, mappedAddr)) {
+		data = CHRROM[mappedAddr];
+		return true;
 	}
 	
-	return data;
+	return false;
 }
 
-void Cartridge::ppuWrite(uint16_t addr, uint8_t data) {
-	if (addr >= 0x0000 && addr <= 0x1FFF) {
-		CHRROM[mapper->ppuMapAddress(addr)] = data;
+bool Cartridge::ppuWrite(uint16_t addr, uint8_t data) {
+	
+	uint16_t mappedAddr = 0x0000;
+	if (mapper->ppuMapWrite(addr, mappedAddr)) {
+		CHRROM[mappedAddr] = data;
+		return true;
 	}
+
+	return false;
 }

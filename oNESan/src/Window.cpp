@@ -100,11 +100,11 @@ void Window::render(Emulator& emulator) {
 
 	renderControlWindow(emulator);
 	renderWatchWindow(emulator);
-
+	
 	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
 	renderMemoryWindow(emulator);
 	ImGui::PopStyleVar(1);
-
+	
 	renderDisassemblyWindow(emulator);
 	renderCHRROMWindow(emulator);
 	renderOAMWindow(emulator);
@@ -202,6 +202,7 @@ void Window::renderWatchWindow(Emulator& emulator) {
 	ImGui::Text("joypad input:     %s", std::bitset<8>(emulator.bus.joypad.input).to_string().c_str());
 	ImGui::Text("joypad shift reg: %s", std::bitset<8>(emulator.bus.joypad.shiftReg).to_string().c_str());
 	ImGui::Text("Total Cycles:      %i", emulator.bus.cpu.totalCycles);
+
 	ImGui::End();
 }
 
@@ -432,7 +433,7 @@ void Window::renderOAMWindow(Emulator& emulator) {
 			uint8_t id     = emulator.bus.ppu.oamArray[i * 4 + 1];
 			uint8_t attrib = emulator.bus.ppu.oamArray[i * 4 + 2];
 			uint8_t x      = emulator.bus.ppu.oamArray[i * 4 + 3];
-			ImGui::Text("(%03d, %03d), ID: %03d, ATT: %03d", x, y, id, attrib);
+			ImGui::Text("(%03d, %03d), ID: %02X, ATT: %02X", x, y, id, attrib);
 		}
 		ImGui::EndTable();
 	}

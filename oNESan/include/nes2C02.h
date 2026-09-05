@@ -11,6 +11,7 @@ public:
 	nes2C02();
 
 	void clock();
+	void reset();
 
 	uint8_t cpuRead(uint16_t addr);
 	void cpuWrite(uint16_t addr, uint8_t data);
@@ -64,6 +65,7 @@ private:
 	// Sprite     palettes at $3F1x
 	uint8_t palettes[32];
 	uint8_t nametables[2][1024];
+	uint8_t patternTables[2][4096];
 
 	// ---------- screen texture data to be read by the renderer
 	
@@ -163,5 +165,8 @@ private:
 
 	// HELPER FUNCTIONS
 	uint8_t flipByte(uint8_t byte);
+
+public:
+	inline const OAMEntry* getScanlineSprites() const { return spriteScanline; }
 };
 

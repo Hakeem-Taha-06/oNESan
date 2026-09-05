@@ -46,7 +46,10 @@ void NesBus::insertCartridge(const std::shared_ptr<Cartridge>& cartridge) {
 
 uint8_t NesBus::cpuRead(uint16_t addr) {
 	uint8_t data = 0x00;
-	if (addr >= 0x0000 && addr <= 0x1FFF) { // cpu ram
+	if (cart->cpuRead(addr, data)) {
+
+	}
+	else if(addr >= 0x0000 && addr <= 0x1FFF) { // cpu ram
 		data = cpuRam[addr & 0x07FF];
 	}
 	else if (addr >= 0x2000 && addr <= 0x3FFF) { // ppu registers
@@ -58,14 +61,15 @@ uint8_t NesBus::cpuRead(uint16_t addr) {
 	else if (addr == 0x4017) {
 		data = joypad.read();
 	}
-	else if (addr >= 0x4020 && addr <= 0xFFFF) { // cartridge PRG-ROM
-		data = cart->cpuRead(addr);
-	}
+	
 	return data;
 }
 
 void NesBus::cpuWrite(uint16_t addr, uint8_t data) {
-	if (addr >= 0x0000 && addr <= 0x1FFF) { // cpu ram
+	if (cart->cpuWrite(addr, data)) {
+
+	}
+	else if (addr >= 0x0000 && addr <= 0x1FFF) { // cpu ram
 		cpuRam[addr & 0x07FF] = data;
 	}
 	else if (addr >= 0x2000 && addr <= 0x3FFF) { // ppu registers
@@ -80,9 +84,6 @@ void NesBus::cpuWrite(uint16_t addr, uint8_t data) {
 	else if(addr == 0x4016){
 		data &= 0x01;
 		joypad.setLatch(data);
-	}
-	else if (addr >= 0x4020 && addr <= 0xFFFF) { // cartridge PRG-ROM
-		cart->cpuWrite(addr, data);
 	}
 }
 
@@ -132,4 +133,5 @@ void NesBus::clock() {
 
 void NesBus::reset() {
 	cpu.reset();
+	ppu.reset();
 }
