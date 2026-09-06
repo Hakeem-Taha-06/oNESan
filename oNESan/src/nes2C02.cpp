@@ -158,10 +158,6 @@ void nes2C02::clock() {
 			transferAddressY();
 		}
 
-		if (scanline == -1 && cycle >= 280 && cycle < 305) {
-			transferAddressY();
-		}
-
 		// FOREGROUND RENDERING (not cycle accurate)
 		if (cycle == 257 && scanline >= 0) {
 			std::memset(spriteScanline, 0xFF, 8 * sizeof(OAMEntry));
@@ -336,7 +332,7 @@ void nes2C02::clock() {
 		}
 
 		if (spriteZeroHitPossible && spriteZeroBeingRendered) {
-			if (~(mask.renderBGLeft | mask.renderSpritesLeft)) {
+			if (!(mask.renderBGLeft | mask.renderSpritesLeft)) {
 				if (cycle >= 9 && cycle < 258) {
 					status.spriteZeroHit = 1;
 				}
