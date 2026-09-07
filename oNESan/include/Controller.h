@@ -17,7 +17,7 @@ public:
 		Right  = (1 << 7)
 	};
 
-	uint8_t input = 0b00010000;
+	uint8_t input = 0x00;
 	uint8_t shiftReg = input;
 
 	uint8_t read() {

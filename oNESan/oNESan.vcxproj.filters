@@ -10,8 +10,14 @@
     <Filter Include="include">
       <UniqueIdentifier>{89AF369E-F58E-B539-FEA6-40106A051C9B}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\Mappers">
+      <UniqueIdentifier>{90C8D64D-FC53-4412-0565-C706716FA012}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src">
       <UniqueIdentifier>{2DAB880B-99B4-887C-2230-9F7C8E38947C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Mappers">
+      <UniqueIdentifier>{3428AC1E-A0DD-2414-29D2-1EEB95861B18}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -24,17 +30,20 @@
     <ClInclude Include="include\Cartridge.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\Controller.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\Emulator.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\InputManager.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="include\Mapper.h">
-      <Filter>include</Filter>
+    <ClInclude Include="include\Mappers\Mapper.h">
+      <Filter>include\Mappers</Filter>
     </ClInclude>
-    <ClInclude Include="include\Mapper000.h">
-      <Filter>include</Filter>
+    <ClInclude Include="include\Mappers\Mapper000.h">
+      <Filter>include\Mappers</Filter>
     </ClInclude>
     <ClInclude Include="include\Window.h">
       <Filter>include</Filter>
@@ -45,7 +54,6 @@
     <ClInclude Include="include\nes6502.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="include\Controller.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dependencies\src\glad.c">
@@ -90,8 +98,8 @@
     <ClCompile Include="src\Emulator.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\Mapper000.cpp">
-      <Filter>src</Filter>
+    <ClCompile Include="src\Mappers\Mapper000.cpp">
+      <Filter>src\Mappers</Filter>
     </ClCompile>
     <ClCompile Include="src\Window.cpp">
       <Filter>src</Filter>

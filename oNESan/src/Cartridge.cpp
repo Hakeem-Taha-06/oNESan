@@ -34,6 +34,8 @@ Cartridge::Cartridge(std::string path) {
 	case 0x0000:
 		mapper = std::make_shared<Mapper000>(numPRGBanks, numCHRBanks);
 		break;
+	case 0x0003:
+		mapper = std::make_shared<Mapper003>(numPRGBanks, numCHRBanks, &PRGROM);
 	}
 	
 	// skip past the trainer
@@ -68,7 +70,7 @@ bool Cartridge::cpuRead(uint16_t addr, uint8_t& data) {
 bool Cartridge::cpuWrite(uint16_t addr, uint8_t data) {
 	uint16_t mappedAddr = 0x0000;
 
-	if (mapper->cpuMapWrite(addr, mappedAddr)) {
+	if (mapper->cpuMapWrite(addr, mappedAddr, data)) {
 		PRGROM[mappedAddr] = data;
 		return true;
 	}
@@ -90,7 +92,7 @@ bool Cartridge::ppuRead(uint16_t addr, uint8_t& data) {
 bool Cartridge::ppuWrite(uint16_t addr, uint8_t data) {
 	
 	uint16_t mappedAddr = 0x0000;
-	if (mapper->ppuMapWrite(addr, mappedAddr)) {
+	if (mapper->ppuMapWrite(addr, mappedAddr, data)) {
 		CHRROM[mappedAddr] = data;
 		return true;
 	}

@@ -59,7 +59,7 @@ uint8_t NesBus::cpuRead(uint16_t addr) {
 		data = joypad.read();
 	}
 	else if (addr == 0x4017) {
-		data = joypad.read();
+		data = 0x00;
 	}
 	
 	return data;
