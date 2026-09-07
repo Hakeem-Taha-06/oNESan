@@ -26,7 +26,7 @@ Cartridge::Cartridge(std::string path) {
 	
 	// mapper1's 4 leftmost bits contain the lowest 4 bits, mapper2's 4 leftmost bits contain the highest 4 bits 
 	mapperID = (header.mapper1 >> 4) | (header.mapper2 & 0xF0); 
-	mirroring = header.mapper1 & 0x01 ? Mirroring::HORIZONTAL : Mirroring::VERTICAL;
+	mirroring = header.mapper1 & 0x01 ? Mirroring::VERTICAL : Mirroring::HORIZONTAL;
 	numPRGBanks = header.PRGSize;
 	numCHRBanks = header.CHRSize;
 	// choose the proper mapper
