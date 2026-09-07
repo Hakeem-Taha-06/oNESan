@@ -19,8 +19,15 @@ void Application::run() {
 		if (deltaTime > 0.5) deltaTime = 0.5;
 
 		if (window.getEmulationMode() == EmulationMode::Automatic) {
-			for(int i =0; i < static_cast<int>(deltaTime*NES_CPU_HZ*3); i++)
+			while (!emulator.bus.ppu.frameComplete) {
 				emulator.clock();
+
+#ifdef DEBUG
+				cyclesEmulated++;
+#endif // DEBUG
+			}
+
+			emulator.bus.ppu.frameComplete = false;
 		}
 		else if (window.getEmulationMode() == EmulationMode::Debug) {
 			emulator.clock();
@@ -33,9 +40,10 @@ void Application::run() {
 #ifdef DEBUG
 		debugOutTime += deltaTime;
 		if (debugOutTime > debugOutTimeLimit) {
-			std::cout << "Delta Time: " << deltaTime << ", CPU Clocks: " << deltaTime * NES_CPU_HZ << '\n';
+			std::cout << "cycles this frame: " << cyclesEmulated << '\n';
 			debugOutTime = 0.0;
 		}
+		cyclesEmulated = 0;
 #endif // DEBUG
 	}
 }

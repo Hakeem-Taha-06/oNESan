@@ -28,6 +28,8 @@ private:
 
 	double debugOutTimeLimit = 1.0;
 	double debugOutTime = 0.0;
+
+	int cyclesEmulated = 0;
 #endif // DEBUG
 };
 
