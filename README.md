@@ -1,7 +1,7 @@
 # oNESan
 NES emulator learning project
 
-https://github.com/user-attachments/assets/e6a5f416-9462-4fc1-8cc0-9bab39fa2c97
+https://github.com/user-attachments/assets/2c09a656-973b-44b0-8e2f-09c75c3a0ec4
 
 ## Credits
 
