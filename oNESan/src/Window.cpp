@@ -165,6 +165,8 @@ void Window::renderControlWindow(Emulator& emulator) {
 		}
 	}
 
+	ImGui::InputInt("Screen Size", &gameScreenSize);
+
 	ImGui::End();
 }
 
@@ -202,7 +204,7 @@ void Window::renderMemoryWindow(Emulator& emulator) {
 	ImGui::Begin("Memory");
 
 	// setup
-	size_t ramSize = 64*1024;
+	size_t ramSize = 0x8000 + emulator.cart->getPRGSize();
 	int numCols = 16;
 	int numRows = (int)ramSize / numCols;
 	ImGuiTableFlags flags = ImGuiTableFlags_BordersOuter | ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg;
@@ -407,7 +409,7 @@ void Window::renderGameScreen(Emulator& emulator) {
 
 	ImTextureID imScrnTex = (ImTextureID)(intptr_t)screenTexture;
 	ImGui::GetWindowDrawList()->AddCallback(ImGui::GetPlatformIO().DrawCallback_SetSamplerNearest, nullptr);
-	ImGui::Image(imScrnTex, ImVec2(256*2, 240*2));
+	ImGui::Image(imScrnTex, ImVec2(256*gameScreenSize, 240*gameScreenSize));
 	ImGui::GetWindowDrawList()->AddCallback(ImGui::GetPlatformIO().DrawCallback_SetSamplerLinear, nullptr);
 
 	ImGui::End();

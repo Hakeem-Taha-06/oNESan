@@ -77,6 +77,7 @@ private:
 
 	// Game Screen
 	unsigned int screenTexture = 0;
+	int gameScreenSize = 2;
 
 	void renderControlWindow(Emulator& emulator);
 	void renderWatchWindow(Emulator& emulator);

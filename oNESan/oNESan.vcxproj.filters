@@ -54,6 +54,8 @@
     <ClInclude Include="include\nes6502.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\Mappers\Mapper003.h" />
+    <ClInclude Include="include\Mappers\Mapper002.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dependencies\src\glad.c">
@@ -113,5 +115,7 @@
     <ClCompile Include="src\nes6502.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\Mappers\Mapper003.cpp" />
+    <ClCompile Include="src\Mappers\Mapper002.cpp" />
   </ItemGroup>
 </Project>

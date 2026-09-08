@@ -116,6 +116,7 @@
     <ClInclude Include="include\nes2C02.h" />
     <ClInclude Include="include\nes6502.h" />
     <ClInclude Include="include\Mappers\Mapper003.h" />
+    <ClInclude Include="include\Mappers\Mapper002.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dependencies\src\glad.c" />
@@ -128,6 +129,7 @@
     <ClCompile Include="dependencies\src\imgui_tables.cpp" />
     <ClCompile Include="dependencies\src\imgui_widgets.cpp" />
     <ClCompile Include="dependencies\src\tinyfiledialogs.c" />
+    <ClCompile Include="src\Mappers\Mapper002.cpp" />
     <ClCompile Include="src\Mappers\Mapper003.cpp" />
     <ClCompile Include="src\Application.cpp" />
     <ClCompile Include="src\Bus.cpp" />

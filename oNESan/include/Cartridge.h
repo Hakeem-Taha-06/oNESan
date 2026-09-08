@@ -10,6 +10,7 @@
 
 #include "Mappers/Mapper.h"
 #include "Mappers/Mapper000.h"
+#include "Mappers/Mapper002.h"
 #include "Mappers/Mapper003.h"
 
 class Cartridge

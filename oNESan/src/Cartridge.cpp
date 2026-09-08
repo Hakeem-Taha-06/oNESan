@@ -29,13 +29,20 @@ Cartridge::Cartridge(std::string path) {
 	mirroring = header.mapper1 & 0x01 ? Mirroring::VERTICAL : Mirroring::HORIZONTAL;
 	numPRGBanks = header.PRGSize;
 	numCHRBanks = header.CHRSize;
+
+	uint8_t fileType = (header.mapper2 & 0x0C);
+
 	// choose the proper mapper
 	switch (mapperID) {
 	case 0x0000:
 		mapper = std::make_shared<Mapper000>(numPRGBanks, numCHRBanks);
 		break;
+	case 0x0002:
+		mapper = std::make_shared<Mapper002>(numPRGBanks, numCHRBanks);
+		break;
 	case 0x0003:
 		mapper = std::make_shared<Mapper003>(numPRGBanks, numCHRBanks, &PRGROM);
+		break;
 	}
 	
 	// skip past the trainer
@@ -45,7 +52,12 @@ Cartridge::Cartridge(std::string path) {
 	// read the PRG ROM and CHR ROM data based on the size defined in the header
 	PRGROM.resize(numPRGBanks * 16384);
 	file.read((char*)PRGROM.data(), PRGROM.size());
-	CHRROM.resize(numCHRBanks * 8192);
+	if (numCHRBanks == 0) { // this cartridge uses CHR RAM 
+		CHRROM.resize(8192);
+	}
+	else {
+		CHRROM.resize(numCHRBanks * 8192);
+	}
 	file.read((char*)CHRROM.data(), CHRROM.size());
 
 	file.close();
@@ -58,7 +70,7 @@ Cartridge::~Cartridge() {
 
 bool Cartridge::cpuRead(uint16_t addr, uint8_t& data) {
 
-	uint16_t mappedAddr = 0x0000;
+	uint32_t mappedAddr = 0x0000;
 
 	if (mapper->cpuMapRead(addr, mappedAddr)) {
 		data = PRGROM[mappedAddr];
@@ -68,7 +80,7 @@ bool Cartridge::cpuRead(uint16_t addr, uint8_t& data) {
 	return false;
 }
 bool Cartridge::cpuWrite(uint16_t addr, uint8_t data) {
-	uint16_t mappedAddr = 0x0000;
+	uint32_t mappedAddr = 0x0000;
 
 	if (mapper->cpuMapWrite(addr, mappedAddr, data)) {
 		PRGROM[mappedAddr] = data;
@@ -79,8 +91,8 @@ bool Cartridge::cpuWrite(uint16_t addr, uint8_t data) {
 }
 
 bool Cartridge::ppuRead(uint16_t addr, uint8_t& data) {
+	uint32_t mappedAddr = 0x0000;
 
-	uint16_t mappedAddr = 0x0000;
 	if (mapper->ppuMapRead(addr, mappedAddr)) {
 		data = CHRROM[mappedAddr];
 		return true;
@@ -90,8 +102,8 @@ bool Cartridge::ppuRead(uint16_t addr, uint8_t& data) {
 }
 
 bool Cartridge::ppuWrite(uint16_t addr, uint8_t data) {
-	
-	uint16_t mappedAddr = 0x0000;
+	uint32_t mappedAddr = 0x0000;
+
 	if (mapper->ppuMapWrite(addr, mappedAddr, data)) {
 		CHRROM[mappedAddr] = data;
 		return true;

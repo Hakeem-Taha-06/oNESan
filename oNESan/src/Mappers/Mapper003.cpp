@@ -9,7 +9,7 @@ Mapper003::~Mapper003() {
 
 }
 
-bool Mapper003::cpuMapRead(uint16_t addr, uint16_t& mappedAddr) {
+bool Mapper003::cpuMapRead(uint16_t addr, uint32_t& mappedAddr) {
 	// PRG RAM
 	//if (addr >= 0x6000 && addr < 0x7FFF) {
 	//	mappedAddr = addr & 0x07FF; // should signal it is in prg ram
@@ -23,7 +23,7 @@ bool Mapper003::cpuMapRead(uint16_t addr, uint16_t& mappedAddr) {
 	return false;
 }
 
-bool Mapper003::cpuMapWrite(uint16_t addr, uint16_t& mappedAddr, uint8_t data) {
+bool Mapper003::cpuMapWrite(uint16_t addr, uint32_t& mappedAddr, uint8_t data) {
 	
 	// PRG RAM
 	//if (addr >= 0x6000 && addr < 0x7FFF) {
@@ -41,7 +41,7 @@ bool Mapper003::cpuMapWrite(uint16_t addr, uint16_t& mappedAddr, uint8_t data) {
 	return false;
 }
 
-bool Mapper003::ppuMapRead(uint16_t addr, uint16_t& mappedAddr) {
+bool Mapper003::ppuMapRead(uint16_t addr, uint32_t& mappedAddr) {
 	if (addr >= 0x0000 && addr <= 0x1FFF) {
 		mappedAddr = CHRROMBank * 0x2000 + addr;
 		return true;
@@ -50,7 +50,7 @@ bool Mapper003::ppuMapRead(uint16_t addr, uint16_t& mappedAddr) {
 	return false;
 }
 
-bool Mapper003::ppuMapWrite(uint16_t addr, uint16_t& mappedAddr, uint8_t data) {
+bool Mapper003::ppuMapWrite(uint16_t addr, uint32_t& mappedAddr, uint8_t data) {
 	if (addr >= 0x0000 && addr <= 0x1FFF) {
 		if (numCHRBanks == 0) {
 			mappedAddr = CHRROMBank * 0x2000 + addr;
